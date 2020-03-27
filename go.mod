@@ -1,6 +1,6 @@
 module github.com/wimspaargaren/slr-automation
 
-go 1.13
+go 1.14
 
 require (
 	bitbucket.org/pkg/inflect v0.0.0-20130829110746-8961c3750a47 // indirect

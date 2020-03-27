@@ -17,3 +17,6 @@ generate: src/slr-api/design/*.go | $(GOAGEN) $(GOIMPORTS)
 lint: | $(GOLANGCI_LINT)
 	@echo Linting Go files
 	@ $(GOLANGCI_LINT) run --deadline=30m --exclude-use-default=false -v  --disable dupl
+
+run:
+	@go run ./src/slr-api   
