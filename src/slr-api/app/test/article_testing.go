@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 )
 
 // CreateArticleBadRequest runs the method Create of the given controller with the given parameters and payload.
@@ -696,7 +697,7 @@ func DownloadArticleOK(t goatest.TInterface, ctx context.Context, service *goa.S
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ListArticleBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ArticleController, projectID uuid.UUID, search *string, statusses *string) (http.ResponseWriter, error) {
+func ListArticleBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ArticleController, projectID uuid.UUID, abstract *string, amountCited *int, doi *string, statusses *int, title *string, type_ *string, year *int) (http.ResponseWriter, error) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -717,13 +718,33 @@ func ListArticleBadRequest(t goatest.TInterface, ctx context.Context, service *g
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if search != nil {
-		sliceVal := []string{*search}
-		query["search"] = sliceVal
+	if abstract != nil {
+		sliceVal := []string{*abstract}
+		query["abstract"] = sliceVal
+	}
+	if amountCited != nil {
+		sliceVal := []string{strconv.Itoa(*amountCited)}
+		query["amount_cited"] = sliceVal
+	}
+	if doi != nil {
+		sliceVal := []string{*doi}
+		query["doi"] = sliceVal
 	}
 	if statusses != nil {
-		sliceVal := []string{*statusses}
+		sliceVal := []string{strconv.Itoa(*statusses)}
 		query["statusses"] = sliceVal
+	}
+	if title != nil {
+		sliceVal := []string{*title}
+		query["title"] = sliceVal
+	}
+	if type_ != nil {
+		sliceVal := []string{*type_}
+		query["type"] = sliceVal
+	}
+	if year != nil {
+		sliceVal := []string{strconv.Itoa(*year)}
+		query["year"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/article/list", projectID),
@@ -735,13 +756,33 @@ func ListArticleBadRequest(t goatest.TInterface, ctx context.Context, service *g
 	}
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
-	if search != nil {
-		sliceVal := []string{*search}
-		prms["search"] = sliceVal
+	if abstract != nil {
+		sliceVal := []string{*abstract}
+		prms["abstract"] = sliceVal
+	}
+	if amountCited != nil {
+		sliceVal := []string{strconv.Itoa(*amountCited)}
+		prms["amount_cited"] = sliceVal
+	}
+	if doi != nil {
+		sliceVal := []string{*doi}
+		prms["doi"] = sliceVal
 	}
 	if statusses != nil {
-		sliceVal := []string{*statusses}
+		sliceVal := []string{strconv.Itoa(*statusses)}
 		prms["statusses"] = sliceVal
+	}
+	if title != nil {
+		sliceVal := []string{*title}
+		prms["title"] = sliceVal
+	}
+	if type_ != nil {
+		sliceVal := []string{*type_}
+		prms["type"] = sliceVal
+	}
+	if year != nil {
+		sliceVal := []string{strconv.Itoa(*year)}
+		prms["year"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()
@@ -783,7 +824,7 @@ func ListArticleBadRequest(t goatest.TInterface, ctx context.Context, service *g
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ListArticleOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ArticleController, projectID uuid.UUID, search *string, statusses *string) (http.ResponseWriter, app.ArticleCollection) {
+func ListArticleOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ArticleController, projectID uuid.UUID, abstract *string, amountCited *int, doi *string, statusses *int, title *string, type_ *string, year *int) (http.ResponseWriter, app.ArticleCollection) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -804,13 +845,33 @@ func ListArticleOK(t goatest.TInterface, ctx context.Context, service *goa.Servi
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if search != nil {
-		sliceVal := []string{*search}
-		query["search"] = sliceVal
+	if abstract != nil {
+		sliceVal := []string{*abstract}
+		query["abstract"] = sliceVal
+	}
+	if amountCited != nil {
+		sliceVal := []string{strconv.Itoa(*amountCited)}
+		query["amount_cited"] = sliceVal
+	}
+	if doi != nil {
+		sliceVal := []string{*doi}
+		query["doi"] = sliceVal
 	}
 	if statusses != nil {
-		sliceVal := []string{*statusses}
+		sliceVal := []string{strconv.Itoa(*statusses)}
 		query["statusses"] = sliceVal
+	}
+	if title != nil {
+		sliceVal := []string{*title}
+		query["title"] = sliceVal
+	}
+	if type_ != nil {
+		sliceVal := []string{*type_}
+		query["type"] = sliceVal
+	}
+	if year != nil {
+		sliceVal := []string{strconv.Itoa(*year)}
+		query["year"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/article/list", projectID),
@@ -822,13 +883,33 @@ func ListArticleOK(t goatest.TInterface, ctx context.Context, service *goa.Servi
 	}
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
-	if search != nil {
-		sliceVal := []string{*search}
-		prms["search"] = sliceVal
+	if abstract != nil {
+		sliceVal := []string{*abstract}
+		prms["abstract"] = sliceVal
+	}
+	if amountCited != nil {
+		sliceVal := []string{strconv.Itoa(*amountCited)}
+		prms["amount_cited"] = sliceVal
+	}
+	if doi != nil {
+		sliceVal := []string{*doi}
+		prms["doi"] = sliceVal
 	}
 	if statusses != nil {
-		sliceVal := []string{*statusses}
+		sliceVal := []string{strconv.Itoa(*statusses)}
 		prms["statusses"] = sliceVal
+	}
+	if title != nil {
+		sliceVal := []string{*title}
+		prms["title"] = sliceVal
+	}
+	if type_ != nil {
+		sliceVal := []string{*type_}
+		prms["type"] = sliceVal
+	}
+	if year != nil {
+		sliceVal := []string{strconv.Itoa(*year)}
+		prms["year"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()

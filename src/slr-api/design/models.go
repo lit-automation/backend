@@ -17,7 +17,7 @@ var _ = StorageGroup("slrautomation", func() {
 			Value("ScienceDirect", 6)
 		})
 
-		Enum("Status", func() {
+		Enum("ArticleStatus", func() {
 			Value("Unprocessed", 1)
 			Value("NotUseful", 2)
 			Value("Useful", 3)
@@ -66,7 +66,7 @@ var _ = StorageGroup("slrautomation", func() {
 			Field("metadata", gorma.JSON)
 			Field("cited_by", gorma.JSON)
 			Field("keywords", gorma.JSON)
-			Field("status", gorma.Enum, "Status")
+			Field("status", gorma.Enum, "ArticleStatus")
 			Field("comment", gorma.String)
 		})
 

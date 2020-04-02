@@ -44,7 +44,7 @@ type Article struct {
 	Query              string
 	QueryPlatform      string
 	SearchResultNumber int
-	Status             Status `sql:"type:smallint"` // enum Status
+	Status             ArticleStatus `sql:"type:smallint"` // enum ArticleStatus
 	Title              string
 	Type               string
 	URL                string

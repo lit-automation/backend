@@ -15,6 +15,7 @@ import (
 	"github.com/goadesign/goa"
 	uuid "github.com/gofrs/uuid"
 	"net/http"
+	"strconv"
 )
 
 // CreateArticleContext provides the article create action context.
@@ -296,9 +297,14 @@ type ListArticleContext struct {
 	context.Context
 	*goa.ResponseData
 	*goa.RequestData
-	ProjectID uuid.UUID
-	Search    *string
-	Statusses *string
+	Abstract    *string
+	AmountCited *int
+	Doi         *string
+	ProjectID   uuid.UUID
+	Statusses   *int
+	Title       *string
+	Type        *string
+	Year        *int
 }
 
 // NewListArticleContext parses the incoming request URL and body, performs validations and creates the
@@ -310,6 +316,27 @@ func NewListArticleContext(ctx context.Context, r *http.Request, service *goa.Se
 	req := goa.ContextRequest(ctx)
 	req.Request = r
 	rctx := ListArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramAbstract := req.Params["abstract"]
+	if len(paramAbstract) > 0 {
+		rawAbstract := paramAbstract[0]
+		rctx.Abstract = &rawAbstract
+	}
+	paramAmountCited := req.Params["amount_cited"]
+	if len(paramAmountCited) > 0 {
+		rawAmountCited := paramAmountCited[0]
+		if amountCited, err2 := strconv.Atoi(rawAmountCited); err2 == nil {
+			tmp6 := amountCited
+			tmp5 := &tmp6
+			rctx.AmountCited = tmp5
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("amount_cited", rawAmountCited, "integer"))
+		}
+	}
+	paramDoi := req.Params["doi"]
+	if len(paramDoi) > 0 {
+		rawDoi := paramDoi[0]
+		rctx.Doi = &rawDoi
+	}
 	paramProjectID := req.Params["projectID"]
 	if len(paramProjectID) > 0 {
 		rawProjectID := paramProjectID[0]
@@ -319,15 +346,37 @@ func NewListArticleContext(ctx context.Context, r *http.Request, service *goa.Se
 			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
 		}
 	}
-	paramSearch := req.Params["search"]
-	if len(paramSearch) > 0 {
-		rawSearch := paramSearch[0]
-		rctx.Search = &rawSearch
-	}
 	paramStatusses := req.Params["statusses"]
 	if len(paramStatusses) > 0 {
 		rawStatusses := paramStatusses[0]
-		rctx.Statusses = &rawStatusses
+		if statusses, err2 := strconv.Atoi(rawStatusses); err2 == nil {
+			tmp9 := statusses
+			tmp8 := &tmp9
+			rctx.Statusses = tmp8
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("statusses", rawStatusses, "integer"))
+		}
+	}
+	paramTitle := req.Params["title"]
+	if len(paramTitle) > 0 {
+		rawTitle := paramTitle[0]
+		rctx.Title = &rawTitle
+	}
+	paramType := req.Params["type"]
+	if len(paramType) > 0 {
+		rawType := paramType[0]
+		rctx.Type = &rawType
+	}
+	paramYear := req.Params["year"]
+	if len(paramYear) > 0 {
+		rawYear := paramYear[0]
+		if year, err2 := strconv.Atoi(rawYear); err2 == nil {
+			tmp11 := year
+			tmp10 := &tmp11
+			rctx.Year = tmp10
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("year", rawYear, "integer"))
+		}
 	}
 	return &rctx, err
 }

@@ -106,7 +106,7 @@ func ArticleFromBytes(b []byte) (*Article, error) {
 		article.SearchResultNumber = *articlePayload.SearchResultNumber
 	}
 	if articlePayload.Status != nil {
-		article.Status = Status(*articlePayload.Status)
+		article.Status = ArticleStatus(*articlePayload.Status)
 	}
 	if articlePayload.Title != nil {
 		article.Title = *articlePayload.Title
@@ -172,10 +172,12 @@ func (m *ArticleDB) ListForProject(ctx context.Context, projectID uuid.UUID) ([]
 	defer goa.MeasureSince([]string{"goa", "db", "article", "list"}, time.Now())
 
 	var objs []*Article
-	err := m.Db.Table(m.TableName()).Where("project_id = ?", projectID).Find(&objs).Error
+	err := m.Db.Table(m.TableName()).Where("project_id = ? AND id = 'B215BE2B-E860-4900-8E3B-A872B93C3687'", projectID).Find(&objs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
+
+	fmt.Println("LEN OBJS",len(objs))
 
 	return objs, nil
 }
@@ -224,7 +226,7 @@ func (a *Article) SetCitedBy(c []*CitedBy) error {
 func (m *ArticleDB) RetrieveNotSnowBalled(ctx context.Context, projectID uuid.UUID) (*Article, error) {
 	var obj Article
 
-	err := m.Db.Table(m.TableName()).Where("(backward_snowball = false OR backward_snowball IS NULL) AND project_id = ?", projectID).Limit(1).Find(&obj).Error
+	err := m.Db.Table(m.TableName()).Where("(backward_snowball = false OR backward_snowball IS NULL) AND project_id = ? AND doi != ''", projectID).Limit(1).Find(&obj).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

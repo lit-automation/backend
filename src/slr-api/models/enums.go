@@ -15,6 +15,58 @@ import (
 	"fmt"
 )
 
+// ArticleStatus Enum
+type ArticleStatus int64
+
+const (
+	ArticleStatusUnprocessed ArticleStatus = 1
+	ArticleStatusNotUseful   ArticleStatus = 2
+	ArticleStatusUseful      ArticleStatus = 3
+	ArticleStatusUnknown     ArticleStatus = 4
+	ArticleStatusDuplicate   ArticleStatus = 5
+)
+
+var articleStatusStrings = map[int64]string{
+	1: "Unprocessed",
+	2: "NotUseful",
+	3: "Useful",
+	4: "Unknown",
+	5: "Duplicate",
+}
+
+var articleStatusStringMap = map[string]ArticleStatus{
+	"Unprocessed": ArticleStatusUnprocessed,
+	"NotUseful":   ArticleStatusNotUseful,
+	"Useful":      ArticleStatusUseful,
+	"Unknown":     ArticleStatusUnknown,
+	"Duplicate":   ArticleStatusDuplicate,
+}
+
+func (u *ArticleStatus) Scan(value interface{}) error {
+	i, ok := value.(int64)
+	if !ok {
+		return fmt.Errorf("could not cast value %v to int64", value)
+	}
+	*u = ArticleStatus(i)
+	return nil
+}
+func (u *ArticleStatus) ScanFromString(name string) error {
+	var ok bool
+	*u, ok = articleStatusStringMap[name]
+	if !ok {
+		return fmt.Errorf("%s is not a valid name for a value of ArticleStatus", name)
+	}
+	return nil
+}
+func (u ArticleStatus) Value() (driver.Value, error) { return int64(u), nil }
+func (u ArticleStatus) String() string {
+	if u == 0 {
+		return "undefined"
+	}
+	return articleStatusStrings[int64(u)]
+}
+func (u ArticleStatus) AllStrings() map[int64]string { return articleStatusStrings }
+
 // Platform Enum
 type Platform int64
 
@@ -164,55 +216,3 @@ func (u ScopeType) String() string {
 	return scopeTypeStrings[int64(u)]
 }
 func (u ScopeType) AllStrings() map[int64]string { return scopeTypeStrings }
-
-// Status Enum
-type Status int64
-
-const (
-	StatusUnprocessed Status = 1
-	StatusNotUseful   Status = 2
-	StatusUseful      Status = 3
-	StatusUnknown     Status = 4
-	StatusDuplicate   Status = 5
-)
-
-var statusStrings = map[int64]string{
-	1: "Unprocessed",
-	2: "NotUseful",
-	3: "Useful",
-	4: "Unknown",
-	5: "Duplicate",
-}
-
-var statusStringMap = map[string]Status{
-	"Unprocessed": StatusUnprocessed,
-	"NotUseful":   StatusNotUseful,
-	"Useful":      StatusUseful,
-	"Unknown":     StatusUnknown,
-	"Duplicate":   StatusDuplicate,
-}
-
-func (u *Status) Scan(value interface{}) error {
-	i, ok := value.(int64)
-	if !ok {
-		return fmt.Errorf("could not cast value %v to int64", value)
-	}
-	*u = Status(i)
-	return nil
-}
-func (u *Status) ScanFromString(name string) error {
-	var ok bool
-	*u, ok = statusStringMap[name]
-	if !ok {
-		return fmt.Errorf("%s is not a valid name for a value of Status", name)
-	}
-	return nil
-}
-func (u Status) Value() (driver.Value, error) { return int64(u), nil }
-func (u Status) String() string {
-	if u == 0 {
-		return "undefined"
-	}
-	return statusStrings[int64(u)]
-}
-func (u Status) AllStrings() map[int64]string { return statusStrings }

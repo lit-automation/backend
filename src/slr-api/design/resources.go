@@ -98,8 +98,13 @@ var _ = Resource("article", func() {
 			GET("list"),
 		)
 		Params(func() {
-			Param("statusses", String, "Statusses")
-			Param("search", String)
+			Param("statusses", Integer)
+			Param("title", String)
+			Param("doi", String)
+			Param("abstract", String)
+			Param("type", String)
+			Param("year", Integer)
+			Param("amount_cited", Integer)
 		})
 		Description("List articles")
 		Response(OK, func() {

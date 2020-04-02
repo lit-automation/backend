@@ -18,9 +18,11 @@ func NewHealthController(service *goa.Service) *HealthController {
 // Health runs the health action.
 func (c *HealthController) Health(ctx *app.HealthHealthContext) error {
 	// HealthController_Health: start_implement
+
 	res := &app.Health{
 		Health: true,
 	}
 	return ctx.OK(res)
+
 	// HealthController_Health: end_implement
 }
