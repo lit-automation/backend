@@ -64,6 +64,7 @@ func (m *Article) ArticleToArticle() *app.Article {
 	tmp2 := int(m.Status)
 	article.Status = &tmp2
 	article.Title = &m.Title
+	article.Type = &m.Type
 	article.URL = &m.URL
 	article.Year = &m.Year
 

@@ -20,6 +20,7 @@ var articlePayload = func() {
 	Attribute("got_pdf", Boolean)
 	Attribute("doi", String)
 	Attribute("url", String)
+	Attribute("type", String)
 	Attribute("platform", Integer)
 	Attribute("status", Integer)
 	Attribute("comment", String)
@@ -98,7 +99,7 @@ var _ = Resource("article", func() {
 			GET("list"),
 		)
 		Params(func() {
-			Param("statusses", Integer)
+			Param("status", Integer)
 			Param("title", String)
 			Param("doi", String)
 			Param("abstract", String)

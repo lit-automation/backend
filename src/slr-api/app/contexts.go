@@ -66,6 +66,7 @@ type createArticlePayload struct {
 	SearchResultNumber *int    `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
 	Status             *int    `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
 	Title              *string `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
+	Type               *string `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
 	URL                *string `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
 	Year               *int    `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
 }
@@ -121,6 +122,9 @@ func (payload *createArticlePayload) Publicize() *CreateArticlePayload {
 	if payload.Title != nil {
 		pub.Title = payload.Title
 	}
+	if payload.Type != nil {
+		pub.Type = payload.Type
+	}
 	if payload.URL != nil {
 		pub.URL = payload.URL
 	}
@@ -148,6 +152,7 @@ type CreateArticlePayload struct {
 	SearchResultNumber *int    `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
 	Status             *int    `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
 	Title              *string `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
+	Type               *string `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
 	URL                *string `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
 	Year               *int    `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
 }
@@ -301,7 +306,7 @@ type ListArticleContext struct {
 	AmountCited *int
 	Doi         *string
 	ProjectID   uuid.UUID
-	Statusses   *int
+	Status      *int
 	Title       *string
 	Type        *string
 	Year        *int
@@ -346,15 +351,15 @@ func NewListArticleContext(ctx context.Context, r *http.Request, service *goa.Se
 			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
 		}
 	}
-	paramStatusses := req.Params["statusses"]
-	if len(paramStatusses) > 0 {
-		rawStatusses := paramStatusses[0]
-		if statusses, err2 := strconv.Atoi(rawStatusses); err2 == nil {
-			tmp9 := statusses
+	paramStatus := req.Params["status"]
+	if len(paramStatus) > 0 {
+		rawStatus := paramStatus[0]
+		if status, err2 := strconv.Atoi(rawStatus); err2 == nil {
+			tmp9 := status
 			tmp8 := &tmp9
-			rctx.Statusses = tmp8
+			rctx.Status = tmp8
 		} else {
-			err = goa.MergeErrors(err, goa.InvalidParamTypeError("statusses", rawStatusses, "integer"))
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("status", rawStatus, "integer"))
 		}
 	}
 	paramTitle := req.Params["title"]
@@ -503,6 +508,7 @@ type updateArticlePayload struct {
 	SearchResultNumber *int    `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
 	Status             *int    `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
 	Title              *string `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
+	Type               *string `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
 	URL                *string `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
 	Year               *int    `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
 }
@@ -558,6 +564,9 @@ func (payload *updateArticlePayload) Publicize() *UpdateArticlePayload {
 	if payload.Title != nil {
 		pub.Title = payload.Title
 	}
+	if payload.Type != nil {
+		pub.Type = payload.Type
+	}
 	if payload.URL != nil {
 		pub.URL = payload.URL
 	}
@@ -585,6 +594,7 @@ type UpdateArticlePayload struct {
 	SearchResultNumber *int    `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
 	Status             *int    `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
 	Title              *string `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
+	Type               *string `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
 	URL                *string `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
 	Year               *int    `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
 }

@@ -697,7 +697,7 @@ func DownloadArticleOK(t goatest.TInterface, ctx context.Context, service *goa.S
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ListArticleBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ArticleController, projectID uuid.UUID, abstract *string, amountCited *int, doi *string, statusses *int, title *string, type_ *string, year *int) (http.ResponseWriter, error) {
+func ListArticleBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ArticleController, projectID uuid.UUID, abstract *string, amountCited *int, doi *string, status *int, title *string, type_ *string, year *int) (http.ResponseWriter, error) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -730,9 +730,9 @@ func ListArticleBadRequest(t goatest.TInterface, ctx context.Context, service *g
 		sliceVal := []string{*doi}
 		query["doi"] = sliceVal
 	}
-	if statusses != nil {
-		sliceVal := []string{strconv.Itoa(*statusses)}
-		query["statusses"] = sliceVal
+	if status != nil {
+		sliceVal := []string{strconv.Itoa(*status)}
+		query["status"] = sliceVal
 	}
 	if title != nil {
 		sliceVal := []string{*title}
@@ -768,9 +768,9 @@ func ListArticleBadRequest(t goatest.TInterface, ctx context.Context, service *g
 		sliceVal := []string{*doi}
 		prms["doi"] = sliceVal
 	}
-	if statusses != nil {
-		sliceVal := []string{strconv.Itoa(*statusses)}
-		prms["statusses"] = sliceVal
+	if status != nil {
+		sliceVal := []string{strconv.Itoa(*status)}
+		prms["status"] = sliceVal
 	}
 	if title != nil {
 		sliceVal := []string{*title}
@@ -824,7 +824,7 @@ func ListArticleBadRequest(t goatest.TInterface, ctx context.Context, service *g
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ListArticleOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ArticleController, projectID uuid.UUID, abstract *string, amountCited *int, doi *string, statusses *int, title *string, type_ *string, year *int) (http.ResponseWriter, app.ArticleCollection) {
+func ListArticleOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ArticleController, projectID uuid.UUID, abstract *string, amountCited *int, doi *string, status *int, title *string, type_ *string, year *int) (http.ResponseWriter, app.ArticleCollection) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -857,9 +857,9 @@ func ListArticleOK(t goatest.TInterface, ctx context.Context, service *goa.Servi
 		sliceVal := []string{*doi}
 		query["doi"] = sliceVal
 	}
-	if statusses != nil {
-		sliceVal := []string{strconv.Itoa(*statusses)}
-		query["statusses"] = sliceVal
+	if status != nil {
+		sliceVal := []string{strconv.Itoa(*status)}
+		query["status"] = sliceVal
 	}
 	if title != nil {
 		sliceVal := []string{*title}
@@ -895,9 +895,9 @@ func ListArticleOK(t goatest.TInterface, ctx context.Context, service *goa.Servi
 		sliceVal := []string{*doi}
 		prms["doi"] = sliceVal
 	}
-	if statusses != nil {
-		sliceVal := []string{strconv.Itoa(*statusses)}
-		prms["statusses"] = sliceVal
+	if status != nil {
+		sliceVal := []string{strconv.Itoa(*status)}
+		prms["status"] = sliceVal
 	}
 	if title != nil {
 		sliceVal := []string{*title}

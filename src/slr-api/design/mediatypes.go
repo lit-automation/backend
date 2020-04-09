@@ -63,6 +63,7 @@ var ArticleMedia = MediaType("application/vnd.article+json", func() {
 		Attribute("keywords", Any)
 		Attribute("status", Integer)
 		Attribute("comment", String)
+		Attribute("type", String)
 		Required("id")
 	})
 	View("default", func() {
@@ -85,6 +86,7 @@ var ArticleMedia = MediaType("application/vnd.article+json", func() {
 		Attribute("platform")
 		Attribute("status")
 		Attribute("comment")
+		Attribute("type")
 	})
 })
 

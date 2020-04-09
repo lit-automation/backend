@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/goadesign/goa"
@@ -141,21 +142,45 @@ type Count struct {
 }
 
 // List returns an array of Article
-func (m *ArticleDB) ListPaginated(ctx context.Context, projectID uuid.UUID, page int) ([]*Article, int, error) {
+func (m *ArticleDB) ListPaginated(ctx *app.ListArticleContext, projectID uuid.UUID, page int) ([]*Article, int, error) {
 	defer goa.MeasureSince([]string{"goa", "db", "article", "list"}, time.Now())
+
+	query := m.Db.Table(m.TableName()).
+		Where("project_id = ?", projectID)
+		// Type        *string
+		// Year        *intj
+	if ctx.Abstract != nil {
+		query = query.Where("LOWER(abstract) LIKE '%" + strings.ToLower(*ctx.Abstract) + "%'")
+	}
+	if ctx.AmountCited != nil {
+		query = query.Where("cited_amount > ?", *ctx.AmountCited)
+	}
+	if ctx.Doi != nil {
+		query = query.Where("LOWER(doi) LIKE '%" + strings.ToLower(*ctx.Doi) + "%'")
+	}
+	if ctx.Status != nil {
+		query = query.Where("status = ?", *ctx.Status)
+	}
+	if ctx.Type != nil {
+		query = query.Where("type = ?", *ctx.Type)
+	}
+	if ctx.Year != nil {
+		query = query.Where("year > ?", *ctx.Year)
+	}
+	if ctx.Title != nil {
+		query = query.Where("LOWER(title) LIKE '%" + strings.ToLower(*ctx.Title) + "%'")
+	}
 	// TODO add filtering
 	var count Count
-	err := m.Db.Table(m.TableName()).
+	err := query.
 		Select("COUNT(id)").
-		Where("project_id = ?", projectID).
 		Find(&count).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, 0, err
 	}
 	var objs []*Article
 	limit := 20
-	err = m.Db.Table(m.TableName()).
-		Where("project_id = ?", projectID).
+	err = query.
 		Limit(limit).
 		Offset(page * limit).
 		Order("doi DESC").
@@ -177,7 +202,7 @@ func (m *ArticleDB) ListForProject(ctx context.Context, projectID uuid.UUID) ([]
 		return nil, err
 	}
 
-	fmt.Println("LEN OBJS",len(objs))
+	fmt.Println("LEN OBJS", len(objs))
 
 	return objs, nil
 }

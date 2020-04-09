@@ -113,6 +113,7 @@ func (c *ProjectController) CreateFromCSV(ctx *app.CreateFromCSVProjectContext) 
 // Graph runs the graph action.
 func (c *ProjectController) Graph(ctx *app.GraphProjectContext) error {
 	// ProjectController_Graph: start_implement
+
 	articles, err := DB.ArticleDB.ListForProject(ctx, ctx.ProjectID)
 	if err != nil {
 		log.WithError(err).WithField(logfields.ProjectID, ctx.ProjectID).Error("unable to list articles")

@@ -19,4 +19,5 @@ lint: | $(GOLANGCI_LINT)
 	@ $(GOLANGCI_LINT) run --deadline=30m --exclude-use-default=false -v  --disable dupl
 
 run:
-	@go run ./src/slr-api   
+	@go build ./src/slr-api
+	@./slr-api

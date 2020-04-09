@@ -36,6 +36,7 @@ type Article struct {
 	SearchResultNumber *int       `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
 	Status             *int       `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
 	Title              *string    `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
+	Type               *string    `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
 	URL                *string    `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
 	Year               *int       `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
 }
