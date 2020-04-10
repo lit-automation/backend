@@ -40,7 +40,6 @@ func enhanceArticles() {
 					log.WithError(err).WithField(logfields.ArticleID, article.ID).Error("unable to update article")
 					continue
 				}
-
 				enhancementChan <- ArticleEnhancement{
 					ID:    article.ID,
 					Title: article.Title,
@@ -94,12 +93,6 @@ func queueWorker() {
 }
 
 func gatherAdditionalInfo(client crossref.Client, bibClient bibtex.Client, article ArticleEnhancement) {
-	res, err := client.QueryWorks(article.Title)
-	if err != nil {
-		counter.Decr()
-		log.WithError(err).WithField(logfields.ArticleID, article.ID).Errorf("err querying for work")
-		return
-	}
 
 	articleFromDB, err := DB.ArticleDB.Get(context.Background(), article.ID)
 	if err != nil {
@@ -138,35 +131,60 @@ func gatherAdditionalInfo(client crossref.Client, bibClient bibtex.Client, artic
 			log.WithError(err).WithField(logfields.ArticleID, article.ID).Error("unable to update article")
 		}
 	}
-	counter.Decr()
 
-	if len(res.Message.Items) == 0 {
-		log.WithField(logfields.ArticleID, article.ID).Warning("no results found")
-		return
-	}
-	if len(res.Message.Items[0].Title) == 0 {
-		log.WithField(logfields.ArticleID, article.ID).Warning("no titles found")
-		return
-	}
-	titleFound := false
-	for _, foundTitle := range res.Message.Items[0].Title {
-		artTitLower := strings.ToLower(article.Title)
-		foundTitLower := strings.ToLower(foundTitle)
-		if strings.Contains(artTitLower, foundTitLower) ||
-			strings.Contains(foundTitLower, artTitLower) {
-			titleFound = true
-			break
+	var artInfo *crossref.ArticleInfo
+	if articleFromDB.Doi != "" {
+		res, err := client.GetOnDOI(articleFromDB.Doi)
+		if err != nil {
+			counter.Decr()
+			log.WithError(err).WithField(logfields.ArticleID, article.ID).Errorf("err querying for work")
+			return
 		}
-		if strings.EqualFold(strings.TrimSpace(article.Title), strings.TrimSpace(foundTitle)) {
-			titleFound = true
-			break
+		counter.Decr()
+		artInfo = &res.Message
+	} else {
+		res, err := client.QueryWorks(article.Title)
+		if err != nil {
+			counter.Decr()
+			log.WithError(err).WithField(logfields.ArticleID, article.ID).Errorf("err querying for work")
+			return
+		}
+		counter.Decr()
+
+		if len(res.Message.Items) == 0 {
+			log.WithField(logfields.ArticleID, article.ID).Warning("no results found")
+			return
+		}
+		if len(res.Message.Items[0].Title) == 0 {
+			log.WithField(logfields.ArticleID, article.ID).Warning("no titles found")
+			return
+		}
+		titleFound := false
+		for _, foundTitle := range res.Message.Items[0].Title {
+			artTitLower := strings.ToLower(article.Title)
+			foundTitLower := strings.ToLower(foundTitle)
+			if strings.Contains(artTitLower, foundTitLower) ||
+				strings.Contains(foundTitLower, artTitLower) {
+				titleFound = true
+				break
+			}
+			if strings.EqualFold(strings.TrimSpace(article.Title), strings.TrimSpace(foundTitle)) {
+				titleFound = true
+				break
+			}
+		}
+		if !titleFound {
+			log.Warningf("title not found for: %s expected: %s, got: %v", article.ID, article.Title, res.Message.Items[0].Title)
+			return
+		} else {
+			artInfo = &res.Message.Items[0]
 		}
 	}
-	if !titleFound {
-		log.Warningf("title not found for: %s expected: %s, got: %v", article.ID, article.Title, res.Message.Items[0].Title)
+	if artInfo == nil {
+		log.Error("Something went wrong artInfo not set.")
 		return
 	}
-	updateArticleInfo(articleFromDB, res)
+	updateArticleInfo(articleFromDB, artInfo)
 	if articleFromDB.Doi != "" {
 		updateBibTex(bibClient, articleFromDB)
 	}
@@ -185,39 +203,38 @@ func updateBibTex(bibClient bibtex.Client, articleFromDB *models.Article) {
 	}
 }
 
-func updateArticleInfo(articleFromDB *models.Article, workRes *crossref.WorksResult) {
-	curFound := workRes.Message.Items[0]
-	if articleFromDB.Doi == "" && curFound.DOI != "" {
-		articleFromDB.Doi = curFound.DOI
+func updateArticleInfo(articleFromDB *models.Article, artInfo *crossref.ArticleInfo) {
+	if articleFromDB.Doi == "" && artInfo.DOI != "" {
+		articleFromDB.Doi = artInfo.DOI
 	}
-	if articleFromDB.CitedAmount == -1 && articleFromDB.CitedAmount < curFound.IsReferencedByCount {
-		articleFromDB.CitedAmount = curFound.IsReferencedByCount
+	if articleFromDB.CitedAmount == -1 && articleFromDB.CitedAmount < artInfo.IsReferencedByCount {
+		articleFromDB.CitedAmount = artInfo.IsReferencedByCount
 	}
 	if articleFromDB.Authors == "" {
 		authors := []string{}
-		for _, auth := range curFound.Author {
+		for _, auth := range artInfo.Author {
 			authors = append(authors, auth.Given+" "+auth.Family)
 		}
 		articleFromDB.Authors = strings.Join(authors, " ; ")
 	}
-	if articleFromDB.Publisher == "" && curFound.Publisher != "" {
-		articleFromDB.Publisher = curFound.Publisher
+	if articleFromDB.Publisher == "" && artInfo.Publisher != "" {
+		articleFromDB.Publisher = artInfo.Publisher
 	}
-	if articleFromDB.Abstract == "" && curFound.Abstract != "" {
-		articleFromDB.Abstract = curFound.Abstract
+	if articleFromDB.Abstract == "" && artInfo.Abstract != "" {
+		articleFromDB.Abstract = artInfo.Abstract
 	}
 	if articleFromDB.Year == -1 {
-		articleFromDB.Year = curFound.Created.DateTime.Year()
+		articleFromDB.Year = artInfo.Created.DateTime.Year()
 	}
-	if articleFromDB.URL == "" && len(curFound.Link) > 0 {
-		articleFromDB.URL = curFound.Link[0].URL
+	if articleFromDB.URL == "" && len(artInfo.Link) > 0 {
+		articleFromDB.URL = artInfo.Link[0].URL
 	}
-	if articleFromDB.Journal == "" && len(curFound.ContainerTitle) > 0 {
-		articleFromDB.Journal = curFound.ContainerTitle[0]
+	if articleFromDB.Journal == "" && len(artInfo.ContainerTitle) > 0 {
+		articleFromDB.Journal = artInfo.ContainerTitle[0]
 	}
 
-	articleFromDB.Type = curFound.Type
-	articleFromDB.Language = curFound.Language
+	articleFromDB.Type = artInfo.Type
+	articleFromDB.Language = artInfo.Language
 
 	err := DB.ArticleDB.Update(context.Background(), articleFromDB)
 	if err != nil {

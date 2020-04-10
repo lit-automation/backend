@@ -2,15 +2,16 @@ package main
 
 import (
 	"encoding/csv"
+	"io"
+	"os"
+	"strconv"
+
 	"github.com/goadesign/goa"
 	"github.com/gofrs/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/packages/logfields"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/models"
-	"io"
-	"os"
-	"strconv"
 )
 
 // ArticleController implements the article resource.
@@ -226,6 +227,11 @@ func (c *ArticleController) Update(ctx *app.UpdateArticleContext) error {
 	if err != nil {
 		return err
 	}
+	orgArticle, err := DB.ArticleDB.Get(ctx, ctx.ArticleID)
+	if err != nil {
+		return ErrBadRequest("Article not found")
+	}
+
 	article, err := models.FromUpdateArticlePayload(ctx.Payload)
 	if err != nil {
 		log.WithError(err).WithField(logfields.ProjectID, projectID).Error("unable to create article from payload")
@@ -245,6 +251,15 @@ func (c *ArticleController) Update(ctx *app.UpdateArticleContext) error {
 	if err != nil {
 		log.WithError(err).Error("unable to update article")
 		return ErrInternal("Unable to update article")
+	}
+
+	if article.Doi != "" || ctx.Payload.CitedBy != nil {
+		if article.Doi != orgArticle.Doi {
+			err := DB.DB.Model(&article).Updates(map[string]interface{}{"checked_by_crossref": false}).Error
+			if err != nil {
+				log.Errorf("Error setting crossref to false")
+			}
+		}
 	}
 
 	return ctx.OK(article.ArticleToArticle())
