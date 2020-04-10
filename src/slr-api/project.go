@@ -158,7 +158,6 @@ func (c *ProjectController) Graph(ctx *app.GraphProjectContext) error {
 		res = append(res, &graphMedia)
 
 	}
-
 	return ctx.OK(res)
 
 	// ProjectController_Graph: end_implement

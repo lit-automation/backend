@@ -197,12 +197,10 @@ func (m *ArticleDB) ListForProject(ctx context.Context, projectID uuid.UUID) ([]
 	defer goa.MeasureSince([]string{"goa", "db", "article", "list"}, time.Now())
 
 	var objs []*Article
-	err := m.Db.Table(m.TableName()).Where("project_id = ? AND id = 'B215BE2B-E860-4900-8E3B-A872B93C3687'", projectID).Find(&objs).Error
+	err := m.Db.Table(m.TableName()).Where("project_id = ?", projectID).Find(&objs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
-
-	fmt.Println("LEN OBJS", len(objs))
 
 	return objs, nil
 }

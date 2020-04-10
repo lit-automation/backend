@@ -38,6 +38,7 @@ func enhanceArticles() {
 				err = DB.ArticleDB.Update(context.Background(), article)
 				if err != nil {
 					log.WithError(err).WithField(logfields.ArticleID, article.ID).Error("unable to update article")
+					continue
 				}
 
 				enhancementChan <- ArticleEnhancement{
@@ -112,14 +113,18 @@ func gatherAdditionalInfo(client crossref.Client, bibClient bibtex.Client, artic
 	} else {
 		for _, citedBy := range citedByList {
 			if citedBy.Doi == "" {
-				res, err := client.QueryWorks(citedBy.Title)
+				citedByRes, err := client.QueryWorks(citedBy.Title)
 				if err == nil {
-					if len(res.Message.Items) > 0 {
-						curFound := res.Message.Items[0]
+					if len(citedByRes.Message.Items) > 0 {
+						curFound := citedByRes.Message.Items[0]
 						if curFound.DOI != "" {
 							citedBy.Doi = curFound.DOI
+						} else {
+							log.WithField(logfields.ArticleID, article.ID).Warning("no doi found for record")
 						}
 					}
+				} else {
+					log.WithError(err).WithField(logfields.ArticleID, article.ID).Errorf("err querying cited by record")
 				}
 			}
 		}
