@@ -45,7 +45,7 @@ func FromCreateArticlePayload(p *app.CreateArticlePayload) (*Article, error) {
 	if err != nil {
 		return nil, fmt.Errorf("couldn't marshal create article payload: %w", err)
 	}
-	return ArticleFromBytes(b)
+	return ArticleFromBytes(b, false)
 }
 
 func FromUpdateArticlePayload(p *app.UpdateArticlePayload) (*Article, error) {
@@ -56,10 +56,10 @@ func FromUpdateArticlePayload(p *app.UpdateArticlePayload) (*Article, error) {
 	if err != nil {
 		return nil, fmt.Errorf("couldn't marshal create article payload: %w", err)
 	}
-	return ArticleFromBytes(b)
+	return ArticleFromBytes(b, true)
 }
 
-func ArticleFromBytes(b []byte) (*Article, error) {
+func ArticleFromBytes(b []byte, update bool) (*Article, error) {
 	log.Infof(string(b))
 	var articlePayload *ArticlePayload
 	err := json.Unmarshal(b, &articlePayload)
@@ -75,6 +75,8 @@ func ArticleFromBytes(b []byte) (*Article, error) {
 	}
 	if articlePayload.CitedAmount != nil {
 		article.CitedAmount = *articlePayload.CitedAmount
+	} else if !update {
+		article.CitedAmount = -1
 	}
 	if articlePayload.Comment != nil {
 		article.Comment = *articlePayload.Comment
@@ -108,6 +110,8 @@ func ArticleFromBytes(b []byte) (*Article, error) {
 	}
 	if articlePayload.Status != nil {
 		article.Status = ArticleStatus(*articlePayload.Status)
+	} else if !update {
+		article.Status = ArticleStatusUnprocessed
 	}
 	if articlePayload.Title != nil {
 		article.Title = *articlePayload.Title
@@ -117,6 +121,8 @@ func ArticleFromBytes(b []byte) (*Article, error) {
 	}
 	if articlePayload.Year != nil {
 		article.Year = *articlePayload.Year
+	} else if !update {
+		article.Year = -1
 	}
 
 	article.Keywords = []byte("{}")
