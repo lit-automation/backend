@@ -239,7 +239,7 @@ func (mt ProjectCollection) Validate() (err error) {
 //
 // Identifier: application/vnd.textpredictmedia+json; view=default
 type Textpredictmedia struct {
-	Class      int     `form:"class" json:"class" yaml:"class" xml:"class"`
+	Class      string  `form:"class" json:"class" yaml:"class" xml:"class"`
 	Confidence float64 `form:"confidence" json:"confidence" yaml:"confidence" xml:"confidence"`
 	Text       string  `form:"text" json:"text" yaml:"text" xml:"text"`
 }
@@ -248,6 +248,9 @@ type Textpredictmedia struct {
 func (mt *Textpredictmedia) Validate() (err error) {
 	if mt.Text == "" {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "text"))
+	}
+	if mt.Class == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "class"))
 	}
 
 	return

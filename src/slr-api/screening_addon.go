@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/cdipaolo/goml/base"
 	"github.com/cdipaolo/goml/text"
 	"github.com/gofrs/uuid"
+	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
 )
 
@@ -19,6 +19,7 @@ const (
 
 // GetScreeningMediaForProject retrieve the predicted values for given article
 func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) *app.Articlescreening {
+	abstract = enhanceAbstract(abstract)
 	stream := make(chan base.TextDatapoint, 100)
 	errors := make(chan error)
 
@@ -27,7 +28,7 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) *a
 
 	err := model.RestoreFromFile("screening-models/" + projectID.String())
 	if err != nil {
-		fmt.Println("no model yet")
+		log.Info("no model yet")
 	}
 
 	close(stream)
@@ -35,34 +36,40 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) *a
 	for {
 		err, more := <-errors
 		if more {
-			fmt.Printf("Error passed: %v", err)
+			log.Errorf("Error passed: %v", err)
 		} else {
 			// training is done!
 			break
 		}
 	}
+	docuCount := model.DocumentCount
+	class := uint8(0)
+	p := float64(0)
 	res := &app.Articlescreening{}
-	class, p := model.Probability(abstract)
+	if docuCount > 0 {
+		class, p = model.Probability(abstract)
+	}
 	res.Abstract = &app.Textpredictmedia{
-		Class:      int(class),
+		Class:      getClass(class),
 		Confidence: p,
 		Text:       abstract,
 	}
-
-	class, p = model.Probability(title)
+	if docuCount > 0 {
+		class, p = model.Probability(title)
+	}
 	res.Title = &app.Textpredictmedia{
-		Class:      int(class),
+		Class:      getClass(class),
 		Confidence: p,
-		Text:       abstract,
+		Text:       title,
 	}
 
 	splittedAbstract := strings.Split(abstract, ".")
 	for _, sentence := range splittedAbstract {
-		class, p := model.Probability(sentence)
-		fmt.Println("P", p)
-		fmt.Println("Clas", class)
+		if docuCount > 0 {
+			class, p = model.Probability(sentence)
+		}
 		res.Sentences = append(res.Sentences, &app.Textpredictmedia{
-			Class:      int(class),
+			Class:      getClass(class),
 			Confidence: p,
 			Text:       sentence,
 		})
@@ -73,6 +80,7 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) *a
 
 // TrainModel trains the model
 func TrainModel(projectID uuid.UUID, abstract, title string, include bool) error {
+	abstract = enhanceAbstract(abstract)
 	stream := make(chan base.TextDatapoint, 100)
 	errors := make(chan error)
 
@@ -81,7 +89,7 @@ func TrainModel(projectID uuid.UUID, abstract, title string, include bool) error
 
 	err := model.RestoreFromFile("screening-models/" + projectID.String())
 	if err != nil {
-		fmt.Println("no model yet")
+		log.Info("no model yet")
 	}
 
 	identifier := ClassTypeExclude
@@ -97,20 +105,40 @@ func TrainModel(projectID uuid.UUID, abstract, title string, include bool) error
 		}
 	}
 
+	stream <- base.TextDatapoint{
+		X: strings.Trim(title, ""),
+		Y: uint8(identifier),
+	}
+
 	close(stream)
 
 	for {
 		err, more := <-errors
 		if more {
-			fmt.Printf("Error passed: %v", err)
+			log.Errorf("Error passed: %v", err)
 		} else {
 			// training is done!
 			break
 		}
 	}
-	err = model.PersistToFile("savemodel")
+	err = model.PersistToFile("screening-models/" + projectID.String())
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func enhanceAbstract(abstract string) string {
+	return strings.ReplaceAll(abstract, "...", "")
+}
+
+func getClass(class uint8) string {
+	switch int(class) {
+	case 0:
+		return "Exclude"
+	case 1:
+		return "Include"
+	default:
+		return "Unknown"
+	}
 }

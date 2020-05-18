@@ -175,20 +175,20 @@ var ArticleScreeningMedia = MediaType("application/vnd.articlescreening+json", f
 	})
 	View("default", func() {
 		Attribute("id")
-		Attribute("title", TextPredictMedia)
-		Attribute("abstract", TextPredictMedia)
-		Attribute("sentences", ArrayOf(TextPredictMedia))
+		Attribute("title")
+		Attribute("abstract")
+		Attribute("sentences")
 	})
 })
 
 var TextPredictMedia = MediaType("application/vnd.textpredictmedia+json", func() {
 	Attribute("text", String)
-	Attribute("class", Integer)
+	Attribute("class", String)
 	Attribute("confidence", Number)
 	Required("text", "class", "confidence")
 	View("default", func() {
 		Attribute("text")
-		Attribute("class", String)
-		Attribute("confidence", String)
+		Attribute("class")
+		Attribute("confidence")
 	})
 })

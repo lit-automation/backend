@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/goadesign/goa"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/models"
@@ -35,7 +34,7 @@ func (c *ScreeningController) Show(ctx *app.ShowScreeningContext) error {
 		return ctx.BadRequest(fmt.Errorf("Both title and abstract needs to be present before screening of articles"))
 	}
 	res := GetScreeningMediaForProject(ctx.ProjectID, article.Title, article.Abstract)
-
+	res.ID = article.ID
 	return ctx.OK(res)
 
 	// ScreeningController_Show: end_implement
@@ -44,6 +43,7 @@ func (c *ScreeningController) Show(ctx *app.ShowScreeningContext) error {
 // Update runs the update action.
 func (c *ScreeningController) Update(ctx *app.UpdateScreeningContext) error {
 	// ScreeningController_Update: start_implement
+
 	article, err := DB.ArticleDB.Get(ctx, ctx.ArticleID)
 	if err != nil {
 		return ctx.BadRequest(fmt.Errorf("Article not found"))
