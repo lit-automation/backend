@@ -6,7 +6,7 @@
 // $ goagen
 // --design=github.com/wimspaargaren/slr-automation/src/slr-api/design
 // --out=$(GOPATH)/src/github.com/wimspaargaren/slr-automation/src/slr-api
-// --version=v1.4.1
+// --version=v1.4.3
 
 package app
 
@@ -1148,6 +1148,156 @@ func (ctx *UpdateProjectContext) NotFound() error {
 
 // InternalServerError sends a HTTP response with status code 500.
 func (ctx *UpdateProjectContext) InternalServerError() error {
+	ctx.ResponseData.WriteHeader(500)
+	return nil
+}
+
+// ShowScreeningContext provides the screening show action context.
+type ShowScreeningContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	ArticleID uuid.UUID
+	ProjectID uuid.UUID
+}
+
+// NewShowScreeningContext parses the incoming request URL and body, performs validations and creates the
+// context used by the screening controller show action.
+func NewShowScreeningContext(ctx context.Context, r *http.Request, service *goa.Service) (*ShowScreeningContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := ShowScreeningContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramArticleID := req.Params["articleID"]
+	if len(paramArticleID) > 0 {
+		rawArticleID := paramArticleID[0]
+		if articleID, err2 := uuid.FromString(rawArticleID); err2 == nil {
+			rctx.ArticleID = articleID
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("articleID", rawArticleID, "uuid"))
+		}
+	}
+	paramProjectID := req.Params["projectID"]
+	if len(paramProjectID) > 0 {
+		rawProjectID := paramProjectID[0]
+		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
+			rctx.ProjectID = projectID
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
+		}
+	}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *ShowScreeningContext) OK(r *Articlescreening) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.articlescreening+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *ShowScreeningContext) BadRequest(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// UpdateScreeningContext provides the screening update action context.
+type UpdateScreeningContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	ArticleID uuid.UUID
+	ProjectID uuid.UUID
+	Payload   *UpdateScreeningPayload
+}
+
+// NewUpdateScreeningContext parses the incoming request URL and body, performs validations and creates the
+// context used by the screening controller update action.
+func NewUpdateScreeningContext(ctx context.Context, r *http.Request, service *goa.Service) (*UpdateScreeningContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := UpdateScreeningContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramArticleID := req.Params["articleID"]
+	if len(paramArticleID) > 0 {
+		rawArticleID := paramArticleID[0]
+		if articleID, err2 := uuid.FromString(rawArticleID); err2 == nil {
+			rctx.ArticleID = articleID
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("articleID", rawArticleID, "uuid"))
+		}
+	}
+	paramProjectID := req.Params["projectID"]
+	if len(paramProjectID) > 0 {
+		rawProjectID := paramProjectID[0]
+		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
+			rctx.ProjectID = projectID
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
+		}
+	}
+	return &rctx, err
+}
+
+// updateScreeningPayload is the screening update action payload.
+type updateScreeningPayload struct {
+	Include *bool `form:"include,omitempty" json:"include,omitempty" yaml:"include,omitempty" xml:"include,omitempty"`
+}
+
+// Validate runs the validation rules defined in the design.
+func (payload *updateScreeningPayload) Validate() (err error) {
+	if payload.Include == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "include"))
+	}
+	return
+}
+
+// Publicize creates UpdateScreeningPayload from updateScreeningPayload
+func (payload *updateScreeningPayload) Publicize() *UpdateScreeningPayload {
+	var pub UpdateScreeningPayload
+	if payload.Include != nil {
+		pub.Include = *payload.Include
+	}
+	return &pub
+}
+
+// UpdateScreeningPayload is the screening update action payload.
+type UpdateScreeningPayload struct {
+	Include bool `form:"include" json:"include" yaml:"include" xml:"include"`
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *UpdateScreeningContext) OK(r *Articlescreening) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.articlescreening+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *UpdateScreeningContext) BadRequest(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// NotFound sends a HTTP response with status code 404.
+func (ctx *UpdateScreeningContext) NotFound() error {
+	ctx.ResponseData.WriteHeader(404)
+	return nil
+}
+
+// InternalServerError sends a HTTP response with status code 500.
+func (ctx *UpdateScreeningContext) InternalServerError() error {
 	ctx.ResponseData.WriteHeader(500)
 	return nil
 }

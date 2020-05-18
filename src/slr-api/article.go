@@ -227,6 +227,7 @@ func (c *ArticleController) Update(ctx *app.UpdateArticleContext) error {
 	if err != nil {
 		return err
 	}
+	// TODO add security for article & project
 	orgArticle, err := DB.ArticleDB.Get(ctx, ctx.ArticleID)
 	if err != nil {
 		return ErrBadRequest("Article not found")

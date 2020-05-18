@@ -6,7 +6,7 @@
 // $ goagen
 // --design=github.com/wimspaargaren/slr-automation/src/slr-api/design
 // --out=$(GOPATH)/src/github.com/wimspaargaren/slr-automation/src/slr-api
-// --version=v1.4.1
+// --version=v1.4.3
 
 package app
 
@@ -19,4 +19,11 @@ import (
 func ProjectHref(projectID interface{}) string {
 	paramprojectID := strings.TrimLeftFunc(fmt.Sprintf("%v", projectID), func(r rune) bool { return r == '/' })
 	return fmt.Sprintf("/v1/project/%v", paramprojectID)
+}
+
+// ScreeningHref returns the resource href.
+func ScreeningHref(projectID, articleID interface{}) string {
+	paramprojectID := strings.TrimLeftFunc(fmt.Sprintf("%v", projectID), func(r rune) bool { return r == '/' })
+	paramarticleID := strings.TrimLeftFunc(fmt.Sprintf("%v", articleID), func(r rune) bool { return r == '/' })
+	return fmt.Sprintf("/v1/project/%v/screen/%v", paramprojectID, paramarticleID)
 }

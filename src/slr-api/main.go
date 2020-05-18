@@ -66,6 +66,9 @@ func main() {
 	// Mount "health" controller
 	c5 := NewHealthController(service)
 	app.MountHealthController(service, c5)
+	// Mount "screening" controller
+	c6 := NewScreeningController(service)
+	app.MountScreeningController(service, c6)
 
 	// Start service
 	if err := service.ListenAndServe(":9001"); err != nil {

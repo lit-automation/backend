@@ -6,6 +6,7 @@ require (
 	bitbucket.org/pkg/inflect v0.0.0-20130829110746-8961c3750a47 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/armon/go-metrics v0.3.2 // indirect
+	github.com/cdipaolo/goml v0.0.0-20190412180403-e1f51f713598
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dimfeld/httppath v0.0.0-20170720192232-ee938bf73598 // indirect
 	github.com/dimfeld/httptreemux v5.0.1+incompatible // indirect

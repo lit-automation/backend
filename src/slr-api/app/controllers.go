@@ -6,7 +6,7 @@
 // $ goagen
 // --design=github.com/wimspaargaren/slr-automation/src/slr-api/design
 // --out=$(GOPATH)/src/github.com/wimspaargaren/slr-automation/src/slr-api
-// --version=v1.4.1
+// --version=v1.4.3
 
 package app
 
@@ -564,6 +564,100 @@ func unmarshalCreateFromCSVProjectPayload(ctx context.Context, service *goa.Serv
 func unmarshalUpdateProjectPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
 	payload := &updateProjectPayload{}
 	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
+}
+
+// ScreeningController is the controller interface for the Screening actions.
+type ScreeningController interface {
+	goa.Muxer
+	Show(*ShowScreeningContext) error
+	Update(*UpdateScreeningContext) error
+}
+
+// MountScreeningController "mounts" a Screening resource controller on the given service.
+func MountScreeningController(service *goa.Service, ctrl ScreeningController) {
+	initService(service)
+	var h goa.Handler
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/screen/:articleID", ctrl.MuxHandler("preflight", handleScreeningOrigin(cors.HandlePreflight()), nil))
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewShowScreeningContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Show(rctx)
+	}
+	h = handleScreeningOrigin(h)
+	service.Mux.Handle("GET", "/v1/project/:projectID/screen/:articleID", ctrl.MuxHandler("show", h, nil))
+	service.LogInfo("mount", "ctrl", "Screening", "action", "Show", "route", "GET /v1/project/:projectID/screen/:articleID")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewUpdateScreeningContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*UpdateScreeningPayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.Update(rctx)
+	}
+	h = handleScreeningOrigin(h)
+	service.Mux.Handle("PUT", "/v1/project/:projectID/screen/:articleID", ctrl.MuxHandler("update", h, unmarshalUpdateScreeningPayload))
+	service.LogInfo("mount", "ctrl", "Screening", "action", "Update", "route", "PUT /v1/project/:projectID/screen/:articleID")
+}
+
+// handleScreeningOrigin applies the CORS response headers corresponding to the origin.
+func handleScreeningOrigin(h goa.Handler) goa.Handler {
+
+	return func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		origin := req.Header.Get("Origin")
+		if origin == "" {
+			// Not a CORS request
+			return h(ctx, rw, req)
+		}
+		if cors.MatchOrigin(origin, "*") {
+			ctx = goa.WithLogContext(ctx, "origin", origin)
+			rw.Header().Set("Access-Control-Allow-Origin", origin)
+			rw.Header().Set("Access-Control-Expose-Headers", "X-List-Count")
+			rw.Header().Set("Access-Control-Max-Age", "600")
+			rw.Header().Set("Access-Control-Allow-Credentials", "true")
+			if acrm := req.Header.Get("Access-Control-Request-Method"); acrm != "" {
+				// We are handling a preflight request
+				rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+				rw.Header().Set("Access-Control-Allow-Headers", "Authorization, X-Pin, X-Platform, content-type, X-Vendor-id, x-list-limit, x-list-page, x-list-filter, X-List-Count, Access-Control-Allow-Origin, accept")
+			}
+			return h(ctx, rw, req)
+		}
+
+		return h(ctx, rw, req)
+	}
+}
+
+// unmarshalUpdateScreeningPayload unmarshals the request body into the context request data Payload field.
+func unmarshalUpdateScreeningPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &updateScreeningPayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	if err := payload.Validate(); err != nil {
+		// Initialize payload with private data structure so it can be logged
+		goa.ContextRequest(ctx).Payload = payload
 		return err
 	}
 	goa.ContextRequest(ctx).Payload = payload.Publicize()

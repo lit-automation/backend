@@ -162,3 +162,33 @@ var ArticleSmall = MediaType("application/vnd.articlesmallmedia+json", func() {
 		Attribute("url")
 	})
 })
+
+//ArticleScreeningMedia article media
+var ArticleScreeningMedia = MediaType("application/vnd.articlescreening+json", func() {
+	Description("Article Screening mediatype")
+	Attributes(func() {
+		Attribute("id", UUID)
+		Attribute("title", TextPredictMedia)
+		Attribute("abstract", TextPredictMedia)
+		Attribute("sentences", ArrayOf(TextPredictMedia))
+		Required("id", "title", "abstract", "sentences")
+	})
+	View("default", func() {
+		Attribute("id")
+		Attribute("title", TextPredictMedia)
+		Attribute("abstract", TextPredictMedia)
+		Attribute("sentences", ArrayOf(TextPredictMedia))
+	})
+})
+
+var TextPredictMedia = MediaType("application/vnd.textpredictmedia+json", func() {
+	Attribute("text", String)
+	Attribute("class", Integer)
+	Attribute("confidence", Number)
+	Required("text", "class", "confidence")
+	View("default", func() {
+		Attribute("text")
+		Attribute("class", String)
+		Attribute("confidence", String)
+	})
+})

@@ -6,7 +6,7 @@
 // $ goagen
 // --design=github.com/wimspaargaren/slr-automation/src/slr-api/design
 // --out=$(GOPATH)/src/github.com/wimspaargaren/slr-automation/src/slr-api
-// --version=v1.4.1
+// --version=v1.4.3
 
 package app
 
@@ -58,6 +58,48 @@ type Articlemetadata struct {
 func (mt *Articlemetadata) Validate() (err error) {
 	if mt.RqIds == nil {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "rq_ids"))
+	}
+	return
+}
+
+// Article Screening mediatype (default view)
+//
+// Identifier: application/vnd.articlescreening+json; view=default
+type Articlescreening struct {
+	Abstract  *Textpredictmedia   `form:"abstract" json:"abstract" yaml:"abstract" xml:"abstract"`
+	ID        uuid.UUID           `form:"id" json:"id" yaml:"id" xml:"id"`
+	Sentences []*Textpredictmedia `form:"sentences" json:"sentences" yaml:"sentences" xml:"sentences"`
+	Title     *Textpredictmedia   `form:"title" json:"title" yaml:"title" xml:"title"`
+}
+
+// Validate validates the Articlescreening media type instance.
+func (mt *Articlescreening) Validate() (err error) {
+
+	if mt.Title == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "title"))
+	}
+	if mt.Abstract == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "abstract"))
+	}
+	if mt.Sentences == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "sentences"))
+	}
+	if mt.Abstract != nil {
+		if err2 := mt.Abstract.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	for _, e := range mt.Sentences {
+		if e != nil {
+			if err2 := e.Validate(); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	if mt.Title != nil {
+		if err2 := mt.Title.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
 	}
 	return
 }
@@ -190,6 +232,24 @@ func (mt ProjectCollection) Validate() (err error) {
 			}
 		}
 	}
+	return
+}
+
+// Textpredictmedia media type (default view)
+//
+// Identifier: application/vnd.textpredictmedia+json; view=default
+type Textpredictmedia struct {
+	Class      int     `form:"class" json:"class" yaml:"class" xml:"class"`
+	Confidence float64 `form:"confidence" json:"confidence" yaml:"confidence" xml:"confidence"`
+	Text       string  `form:"text" json:"text" yaml:"text" xml:"text"`
+}
+
+// Validate validates the Textpredictmedia media type instance.
+func (mt *Textpredictmedia) Validate() (err error) {
+	if mt.Text == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "text"))
+	}
+
 	return
 }
 

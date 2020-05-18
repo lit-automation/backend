@@ -6,7 +6,7 @@
 // $ goagen
 // --design=github.com/wimspaargaren/slr-automation/src/slr-api/design
 // --out=$(GOPATH)/src/github.com/wimspaargaren/slr-automation/src/slr-api
-// --version=v1.4.1
+// --version=v1.4.3
 
 package app
 

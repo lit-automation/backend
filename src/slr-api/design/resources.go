@@ -251,3 +251,36 @@ var _ = Resource("user", func() {
 		Response(Conflict, ErrorMedia)
 	})
 })
+
+var _ = Resource("screening", func() {
+	Parent("project")
+	BasePath("/screen")
+	DefaultMedia(ArticleScreeningMedia)
+	Action("show", func() {
+		Routing(
+			GET("/:articleID"),
+		)
+		Params(func() {
+			Param("articleID", UUID, "Article ID")
+		})
+		Description("Show article screening")
+		Response(OK)
+		Response(BadRequest, ErrorMedia)
+	})
+	Action("update", func() {
+		Routing(
+			PUT("/:articleID"),
+		)
+		Params(func() {
+			Param("articleID", UUID, "Article ID")
+		})
+		Payload(func() {
+			Member("include", Boolean)
+			Required("include")
+		})
+		Response(OK)
+		Response(NotFound)
+		Response(InternalServerError)
+		Response(BadRequest, ErrorMedia)
+	})
+})
