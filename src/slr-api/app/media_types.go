@@ -66,10 +66,11 @@ func (mt *Articlemetadata) Validate() (err error) {
 //
 // Identifier: application/vnd.articlescreening+json; view=default
 type Articlescreening struct {
-	Abstract  *Textpredictmedia   `form:"abstract" json:"abstract" yaml:"abstract" xml:"abstract"`
-	ID        uuid.UUID           `form:"id" json:"id" yaml:"id" xml:"id"`
-	Sentences []*Textpredictmedia `form:"sentences" json:"sentences" yaml:"sentences" xml:"sentences"`
-	Title     *Textpredictmedia   `form:"title" json:"title" yaml:"title" xml:"title"`
+	Abstract           *Textpredictmedia          `form:"abstract" json:"abstract" yaml:"abstract" xml:"abstract"`
+	ID                 uuid.UUID                  `form:"id" json:"id" yaml:"id" xml:"id"`
+	MostImportantWords []*Mostimportantwordsmedia `form:"most_important_words" json:"most_important_words" yaml:"most_important_words" xml:"most_important_words"`
+	Sentences          []*Textpredictmedia        `form:"sentences" json:"sentences" yaml:"sentences" xml:"sentences"`
+	Title              *Textpredictmedia          `form:"title" json:"title" yaml:"title" xml:"title"`
 }
 
 // Validate validates the Articlescreening media type instance.
@@ -84,9 +85,19 @@ func (mt *Articlescreening) Validate() (err error) {
 	if mt.Sentences == nil {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "sentences"))
 	}
+	if mt.MostImportantWords == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "most_important_words"))
+	}
 	if mt.Abstract != nil {
 		if err2 := mt.Abstract.Validate(); err2 != nil {
 			err = goa.MergeErrors(err, err2)
+		}
+	}
+	for _, e := range mt.MostImportantWords {
+		if e != nil {
+			if err2 := e.Validate(); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
 		}
 	}
 	for _, e := range mt.Sentences {
@@ -195,6 +206,24 @@ func (mt GraphmediaCollection) Validate() (err error) {
 type Health struct {
 	// True if API is healthy
 	Health bool `form:"health" json:"health" yaml:"health" xml:"health"`
+}
+
+// Mostimportantwordsmedia media type (default view)
+//
+// Identifier: application/vnd.mostimportantwordsmedia+json; view=default
+type Mostimportantwordsmedia struct {
+	Frequency float64 `form:"frequency" json:"frequency" yaml:"frequency" xml:"frequency"`
+	TfIdf     float64 `form:"tf_idf" json:"tf_idf" yaml:"tf_idf" xml:"tf_idf"`
+	Word      string  `form:"word" json:"word" yaml:"word" xml:"word"`
+}
+
+// Validate validates the Mostimportantwordsmedia media type instance.
+func (mt *Mostimportantwordsmedia) Validate() (err error) {
+	if mt.Word == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "word"))
+	}
+
+	return
 }
 
 // Project mediatype (default view)

@@ -31,7 +31,7 @@ func (c *ScreeningController) Show(ctx *app.ShowScreeningContext) error {
 		return ctx.BadRequest(fmt.Errorf("Article not found"))
 	}
 	if article.Title == "" || article.Abstract == "" {
-		return ctx.BadRequest(fmt.Errorf("Both title and abstract needs to be present before screening of articles"))
+		return ErrBadRequest("Both title and abstract needs to be present before screening of articles")
 	}
 	res := GetScreeningMediaForProject(ctx.ProjectID, article.Title, article.Abstract)
 	res.ID = article.ID

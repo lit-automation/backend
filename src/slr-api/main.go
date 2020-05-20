@@ -70,6 +70,8 @@ func main() {
 	c6 := NewScreeningController(service)
 	app.MountScreeningController(service, c6)
 
+	runMigrations(DB)
+
 	// Start service
 	if err := service.ListenAndServe(":9001"); err != nil {
 		service.LogError("startup", "err", err)

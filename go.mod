@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	bitbucket.org/pkg/inflect v0.0.0-20130829110746-8961c3750a47 // indirect
+	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/armon/go-metrics v0.3.2 // indirect
 	github.com/cdipaolo/goml v0.0.0-20190412180403-e1f51f713598
@@ -26,10 +27,11 @@ require (
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/zach-klippenstein/goregen v0.0.0-20160303162051-795b5e3961ea // indirect
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
+	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
 	golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae // indirect
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/tools v0.0.0-20200301222351-066e0c02454c // indirect
+	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 	lab.weave.nl/forks/gorma v0.0.0-20191119150556-a3c1298288a9
 )

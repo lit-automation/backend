@@ -63,7 +63,7 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) *a
 		Text:       title,
 	}
 
-	splittedAbstract := strings.Split(abstract, ".")
+	splittedAbstract := strings.Split(strings.Trim(abstract, ""), ".")
 	for _, sentence := range splittedAbstract {
 		if docuCount > 0 {
 			class, p = model.Probability(sentence)
@@ -74,7 +74,18 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) *a
 			Text:       sentence,
 		})
 	}
-
+	if docuCount == 0 {
+		return res
+	}
+	tf := text.TFIDF(*model)
+	frequencies := tf.MostImportantWords(abstract, 10)
+	for _, freq := range frequencies {
+		res.MostImportantWords = append(res.MostImportantWords, &app.Mostimportantwordsmedia{
+			Frequency: freq.Frequency,
+			TfIdf:     freq.TFIDF,
+			Word:      freq.Word,
+		})
+	}
 	return res
 }
 
