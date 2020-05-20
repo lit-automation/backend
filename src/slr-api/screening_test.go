@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"testing"
 
@@ -78,13 +77,8 @@ func (s *ScreenTestSuite) TestAccuracy() {
 
 	s.Equal(9, correctAbstract)
 	s.Equal(0, wrongAbstract)
-	fmt.Println("HAd", correctAbstract, "correct abstract answers")
-	fmt.Println("HAd", wrongAbstract, "wrong abstract answers")
 	s.Equal(8, correctTitle)
 	s.Equal(1, wrongTitle)
-	fmt.Println("HAd", correctTitle, "correct title answers")
-	fmt.Println("HAd", wrongTitle, "wrong title answers")
-
 }
 
 func TestScreenTestSuite(t *testing.T) {
