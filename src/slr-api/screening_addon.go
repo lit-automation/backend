@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/cdipaolo/goml/base"
 	"github.com/cdipaolo/goml/text"
@@ -21,14 +24,28 @@ const (
 
 // GetScreeningMediaForProject retrieve the predicted values for given article
 func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*app.Articlescreening, error) {
-	abstract, doc, err := SanitizeText(abstract)
-	if err != nil {
-		return nil, err
-	}
-	title, _, err = SanitizeText(title)
-	if err != nil {
-		return nil, err
-	}
+	wg := &sync.WaitGroup{}
+	var doc *prose.Document
+	now := time.Now()
+	wg.Add(2)
+	go func() {
+		var err error
+		abstract, doc, err = SanitizeText(abstract)
+		if err != nil {
+			panic(err)
+		}
+		wg.Done()
+	}()
+	go func() {
+		var err error
+		title, _, err = SanitizeText(title)
+		if err != nil {
+			panic(err)
+		}
+		wg.Done()
+	}()
+	wg.Wait()
+	fmt.Println("dur", time.Since(now))
 	stream := make(chan base.TextDatapoint, 100)
 	errors := make(chan error)
 
@@ -36,7 +53,7 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 	model.Output = ioutil.Discard
 	go model.OnlineLearn(errors)
 
-	err = model.RestoreFromFile("screening-models/" + projectID.String())
+	err := model.RestoreFromFile("screening-models/" + projectID.String())
 	if err != nil {
 		log.Info("no model yet")
 	}
@@ -100,21 +117,33 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 
 // TrainModel trains the model
 func TrainModel(projectID uuid.UUID, abstract, title string, include bool) error {
-	abstract, _, err := SanitizeText(abstract)
-	if err != nil {
-		return err
-	}
-	title, _, err = SanitizeText(title)
-	if err != nil {
-		return err
-	}
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+	go func() {
+		var err error
+		abstract, _, err = SanitizeText(abstract)
+		if err != nil {
+			panic(err)
+		}
+		wg.Done()
+	}()
+	go func() {
+		var err error
+		title, _, err = SanitizeText(title)
+		if err != nil {
+			panic(err)
+		}
+		wg.Done()
+	}()
+	wg.Wait()
+
 	stream := make(chan base.TextDatapoint, 100)
 	errors := make(chan error)
 	model := text.NewNaiveBayes(stream, 2, base.OnlyWordsAndNumbers)
 	model.Output = ioutil.Discard
 	go model.OnlineLearn(errors)
 
-	err = model.RestoreFromFile("screening-models/" + projectID.String())
+	err := model.RestoreFromFile("screening-models/" + projectID.String())
 	if err != nil {
 		log.Info("no model yet")
 	}
@@ -183,11 +212,16 @@ func SanitizeText(text string) (string, *prose.Document, error) {
 		if tok.Tag == "TO" {
 			continue
 		}
-
+		if tok.Tag == "RB" || tok.Tag == "RBR" || tok.Tag == "RBS" || tok.Tag == "RP" {
+			continue
+		}
 		if tok.Tag == "DT" {
 			continue
 		}
 		if tok.Tag == "CC" {
+			continue
+		}
+		if tok.Tag == "CD" {
 			continue
 		}
 		if tok.Tag == "," || tok.Tag == "." {

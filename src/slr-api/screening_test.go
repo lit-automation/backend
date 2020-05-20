@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -20,8 +21,8 @@ type ScreenTestSuite struct {
 	suite.Suite
 }
 
-func (s *ScreenTestSuite) TestAccuracy() {
-	file, err := ioutil.ReadFile("testdata/article_set.json")
+func (s *ScreenTestSuite) TestAccuracySmallSet() {
+	file, err := ioutil.ReadFile("testdata/article_set_small.json")
 	s.Require().NoError(err)
 	testData := []TestArticle{}
 	err = json.Unmarshal([]byte(file), &testData)
@@ -49,36 +50,110 @@ func (s *ScreenTestSuite) TestAccuracy() {
 		}
 	}
 
-	correctAbstract := 0
-	wrongAbstract := 0
-
-	correctTitle := 0
-	wrongTitle := 0
+	abstractAccuracy := &AccuracyScore{Total: len(testData)}
+	titleAccuracy := &AccuracyScore{Total: len(testData)}
 
 	for _, art := range testData {
 		res, err := GetScreeningMediaForProject(modelID, art.Title, art.Abstract)
 		s.Require().NoError(err)
-		if art.Include && res.Abstract.Class == "Include" {
-			correctAbstract++
-		} else if !art.Include && res.Abstract.Class == "Exclude" {
-			correctAbstract++
-		} else {
-			wrongAbstract++
-		}
+		abstractAccuracy.verifyResult(art.Include, res.Abstract.Class)
+		titleAccuracy.verifyResult(art.Include, res.Title.Class)
 
-		if art.Include && res.Title.Class == "Include" {
-			correctTitle++
-		} else if !art.Include && res.Title.Class == "Exclude" {
-			correctTitle++
-		} else {
-			wrongTitle++
-		}
 	}
 
-	s.Equal(9, correctAbstract)
-	s.Equal(0, wrongAbstract)
-	s.Equal(8, correctTitle)
-	s.Equal(1, wrongTitle)
+	s.Equal(9, abstractAccuracy.Correct)
+	s.Equal(0, abstractAccuracy.Incorrect)
+	s.Equal(8, titleAccuracy.Correct)
+	s.Equal(1, titleAccuracy.Incorrect)
+}
+
+type AccuracyScore struct {
+	Total         int
+	Correct       int
+	Incorrect     int
+	FalsePositive int
+	FalseNegative int
+}
+
+func (s *ScreenTestSuite) TestAccuracyLargeSet() {
+	file, err := ioutil.ReadFile("testdata/article_set_large.json")
+	s.Require().NoError(err)
+	testData := []TestArticle{}
+	err = json.Unmarshal([]byte(file), &testData)
+	s.Require().NoError(err)
+
+	modelID := uuid.Must(uuid.NewV4())
+
+	training := 5
+
+	trainedSet := []int{}
+	for i, art := range testData {
+		if i > training {
+			break
+		}
+		trainedSet = append(trainedSet, i)
+		err := TrainModel(modelID, art.Abstract, art.Title, art.Include)
+		s.Require().NoError(err)
+	}
+
+	abstractAccuracy := &AccuracyScore{Total: len(testData) - len(trainedSet)}
+	titleAccuracy := &AccuracyScore{Total: len(testData) - len(trainedSet)}
+
+	for i, art := range testData {
+		if isInTrainedSet(trainedSet, i) {
+			continue
+		}
+		res, err := GetScreeningMediaForProject(modelID, art.Title, art.Abstract)
+		s.Require().NoError(err)
+		abstractAccuracy.verifyResult(art.Include, res.Abstract.Class)
+		titleAccuracy.verifyResult(art.Include, res.Title.Class)
+
+		if i%50 == 0 {
+			log.Infof("Abstract:")
+			abstractAccuracy.PrintAccuracy()
+			log.Infof("Title:")
+			titleAccuracy.PrintAccuracy()
+		}
+	}
+	log.Infof("Abstract:")
+	abstractAccuracy.PrintAccuracy()
+	log.Infof("Title:")
+	titleAccuracy.PrintAccuracy()
+}
+
+func isInTrainedSet(trainedSet []int, i int) bool {
+	for _, j := range trainedSet {
+		if j == i {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *AccuracyScore) verifyResult(shouldBeIncluded bool, definedClass string) {
+	if shouldBeIncluded && definedClass == "Include" {
+		s.Correct++
+	} else if !shouldBeIncluded && definedClass == "Exclude" {
+		s.Correct++
+	} else {
+		if shouldBeIncluded {
+			s.FalseNegative++
+		} else {
+			s.FalsePositive++
+		}
+		s.Incorrect++
+	}
+}
+
+func (s *AccuracyScore) PrintAccuracy() {
+	log.Infof("Correct: %d, %f", s.Correct, calcPercentage(s.Correct, s.Total))
+	log.Infof("Incorrect: %d, %f", s.Incorrect, calcPercentage(s.Incorrect, s.Total))
+	log.Infof("False Positive: %d, %f", s.FalsePositive, calcPercentage(s.FalsePositive, s.Incorrect))
+	log.Infof("False Negative: %d, %f", s.FalseNegative, calcPercentage(s.FalseNegative, s.Incorrect))
+}
+
+func calcPercentage(x, y int) float64 {
+	return float64(x) / float64(y) * 100
 }
 
 func TestScreenTestSuite(t *testing.T) {
