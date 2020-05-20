@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"strings"
 
 	"github.com/cdipaolo/goml/base"
@@ -8,6 +9,7 @@ import (
 	"github.com/gofrs/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
+	"gopkg.in/jdkato/prose.v2"
 )
 
 type ClassType int
@@ -18,15 +20,23 @@ const (
 )
 
 // GetScreeningMediaForProject retrieve the predicted values for given article
-func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) *app.Articlescreening {
-	abstract = enhanceAbstract(abstract)
+func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*app.Articlescreening, error) {
+	abstract, doc, err := SanitizeText(abstract)
+	if err != nil {
+		return nil, err
+	}
+	title, _, err = SanitizeText(title)
+	if err != nil {
+		return nil, err
+	}
 	stream := make(chan base.TextDatapoint, 100)
 	errors := make(chan error)
 
 	model := text.NewNaiveBayes(stream, 2, base.OnlyWordsAndNumbers)
+	model.Output = ioutil.Discard
 	go model.OnlineLearn(errors)
 
-	err := model.RestoreFromFile("screening-models/" + projectID.String())
+	err = model.RestoreFromFile("screening-models/" + projectID.String())
 	if err != nil {
 		log.Info("no model yet")
 	}
@@ -63,19 +73,18 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) *a
 		Text:       title,
 	}
 
-	splittedAbstract := strings.Split(strings.Trim(abstract, ""), ".")
-	for _, sentence := range splittedAbstract {
+	for _, sentence := range doc.Sentences() {
 		if docuCount > 0 {
-			class, p = model.Probability(sentence)
+			class, p = model.Probability(sentence.Text)
 		}
 		res.Sentences = append(res.Sentences, &app.Textpredictmedia{
 			Class:      getClass(class),
 			Confidence: p,
-			Text:       sentence,
+			Text:       sentence.Text,
 		})
 	}
 	if docuCount == 0 {
-		return res
+		return res, nil
 	}
 	tf := text.TFIDF(*model)
 	frequencies := tf.MostImportantWords(abstract, 10)
@@ -86,19 +95,26 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) *a
 			Word:      freq.Word,
 		})
 	}
-	return res
+	return res, nil
 }
 
 // TrainModel trains the model
 func TrainModel(projectID uuid.UUID, abstract, title string, include bool) error {
-	abstract = enhanceAbstract(abstract)
+	abstract, doc, err := SanitizeText(abstract)
+	if err != nil {
+		return err
+	}
+	title, _, err = SanitizeText(title)
+	if err != nil {
+		return err
+	}
 	stream := make(chan base.TextDatapoint, 100)
 	errors := make(chan error)
-
 	model := text.NewNaiveBayes(stream, 2, base.OnlyWordsAndNumbers)
+	model.Output = ioutil.Discard
 	go model.OnlineLearn(errors)
 
-	err := model.RestoreFromFile("screening-models/" + projectID.String())
+	err = model.RestoreFromFile("screening-models/" + projectID.String())
 	if err != nil {
 		log.Info("no model yet")
 	}
@@ -108,10 +124,9 @@ func TrainModel(projectID uuid.UUID, abstract, title string, include bool) error
 		identifier = ClassTypeInclude
 	}
 
-	splittedAbstract := strings.Split(abstract, ".")
-	for _, sentence := range splittedAbstract {
+	for _, sentence := range doc.Sentences() {
 		stream <- base.TextDatapoint{
-			X: strings.Trim(sentence, ""),
+			X: strings.Trim(sentence.Text, ""),
 			Y: uint8(identifier),
 		}
 	}
@@ -139,10 +154,6 @@ func TrainModel(projectID uuid.UUID, abstract, title string, include bool) error
 	return nil
 }
 
-func enhanceAbstract(abstract string) string {
-	return strings.ReplaceAll(abstract, "...", "")
-}
-
 func getClass(class uint8) string {
 	switch int(class) {
 	case 0:
@@ -152,4 +163,34 @@ func getClass(class uint8) string {
 	default:
 		return "Unknown"
 	}
+}
+
+func SanitizeText(text string) (string, *prose.Document, error) {
+	text = strings.ReplaceAll(text, "...", "")
+	doc, err := prose.NewDocument(text)
+	if err != nil {
+		return "", nil, err
+	}
+	res := ""
+	for _, tok := range doc.Tokens() {
+		if tok.Tag == "IN" {
+			continue
+		}
+		if tok.Tag == "TO" {
+			continue
+		}
+
+		if tok.Tag == "DT" {
+			continue
+		}
+		if tok.Tag == "CC" {
+			continue
+		}
+		if tok.Tag == "," || tok.Tag == "." {
+			res += tok.Text + " "
+		} else {
+			res += tok.Text + " "
+		}
+	}
+	return res, doc, nil
 }

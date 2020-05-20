@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/goadesign/goa"
+	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/models"
 )
@@ -33,7 +35,11 @@ func (c *ScreeningController) Show(ctx *app.ShowScreeningContext) error {
 	if article.Title == "" || article.Abstract == "" {
 		return ErrBadRequest("Both title and abstract needs to be present before screening of articles")
 	}
-	res := GetScreeningMediaForProject(ctx.ProjectID, article.Title, article.Abstract)
+	res, err := GetScreeningMediaForProject(ctx.ProjectID, article.Title, article.Abstract)
+	if err != nil {
+		log.WithError(err).Error("unable to retrieve screening media")
+		return ctx.InternalServerError()
+	}
 	res.ID = article.ID
 	return ctx.OK(res)
 

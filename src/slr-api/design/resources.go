@@ -265,6 +265,7 @@ var _ = Resource("screening", func() {
 		})
 		Description("Show article screening")
 		Response(OK)
+		Response(InternalServerError)
 		Response(BadRequest, ErrorMedia)
 	})
 	Action("update", func() {
