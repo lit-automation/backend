@@ -100,7 +100,7 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 
 // TrainModel trains the model
 func TrainModel(projectID uuid.UUID, abstract, title string, include bool) error {
-	abstract, doc, err := SanitizeText(abstract)
+	abstract, _, err := SanitizeText(abstract)
 	if err != nil {
 		return err
 	}
@@ -124,11 +124,9 @@ func TrainModel(projectID uuid.UUID, abstract, title string, include bool) error
 		identifier = ClassTypeInclude
 	}
 
-	for _, sentence := range doc.Sentences() {
-		stream <- base.TextDatapoint{
-			X: strings.Trim(sentence.Text, ""),
-			Y: uint8(identifier),
-		}
+	stream <- base.TextDatapoint{
+		X: strings.Trim(abstract, ""),
+		Y: uint8(identifier),
 	}
 
 	stream <- base.TextDatapoint{
@@ -165,6 +163,12 @@ func getClass(class uint8) string {
 	}
 }
 
+// SanitizeText sanitizes text for training and screening
+// Removes:
+//	- conjunction, subordinating or preposition (IN)
+//	- infinitival to (TO)
+//	- determiner (DT)
+//	- conjunction, coordinating (CC)
 func SanitizeText(text string) (string, *prose.Document, error) {
 	text = strings.ReplaceAll(text, "...", "")
 	doc, err := prose.NewDocument(text)
