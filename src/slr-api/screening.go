@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/goadesign/goa"
 	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"

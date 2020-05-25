@@ -82,6 +82,14 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 		Text:       abstract,
 	}
 	if docuCount > 0 {
+		class, p = model.Probability(title + " " + abstract)
+	}
+	res.AbstractAndTitle = &app.Textpredictmedia{
+		Class:      getClass(class),
+		Confidence: p,
+		Text:       abstract,
+	}
+	if docuCount > 0 {
 		class, p = model.Probability(title)
 	}
 	res.Title = &app.Textpredictmedia{
@@ -152,6 +160,10 @@ func TrainModel(projectID uuid.UUID, abstract, title string, include bool) error
 	if include {
 		identifier = ClassTypeInclude
 	}
+	// stream <- base.TextDatapoint{
+	// 	X: strings.Trim(title, "") + " " + strings.Trim(abstract, ""),
+	// 	Y: uint8(identifier),
+	// }
 
 	stream <- base.TextDatapoint{
 		X: strings.Trim(abstract, ""),
@@ -224,11 +236,9 @@ func SanitizeText(text string) (string, *prose.Document, error) {
 		if tok.Tag == "CD" {
 			continue
 		}
-		if tok.Tag == "," || tok.Tag == "." {
-			res += tok.Text + " "
-		} else {
-			res += tok.Text + " "
-		}
+		// stem := porterstemmer.StemString(tok.Text) + " "
+		// res += stem
+		res += tok.Text + " "
 	}
 	return res, doc, nil
 }

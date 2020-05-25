@@ -55,6 +55,12 @@ func (c *ProjectController) ProcessCSV(tx *gorm.DB, projectID uuid.UUID, input s
 			switch k {
 			case "title":
 				article.Title = record[v]
+			case "abstract":
+				article.Title = record[v]
+			case "doi":
+				article.Doi = record[v]
+			case "url":
+				article.URL = record[v]
 			case "year":
 				year, err := strconv.Atoi(record[v])
 				if err == nil {

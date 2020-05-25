@@ -2,9 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/jinzhu/gorm"
@@ -25,26 +22,4 @@ func (c *ArticleController) ProjectIDFromContext(ctx context.Context, projectID 
 		return uuid.Nil, ErrInternal("Unable to retrieve projects")
 	}
 	return project.ID, nil
-}
-
-func (c *ArticleController) TryToFindAbstract(url string) (string, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-
-	if strings.Contains(url, "ieeexplore.ieee.org") {
-		return c.processIEEE(resp)
-	} else {
-		return "", fmt.Errorf("unknown url")
-	}
-}
-
-func (c *ArticleController) processIEEE(response *http.Response) (string, error) {
-	// doc, err := goquery.NewDocumentFromReader(response.Body)
-	// if err != nil {
-	// 	log.Errorf("Could not create document from read, error: %s", err.Error())
-	// 	return "", err
-	// }
-	return "", nil
 }

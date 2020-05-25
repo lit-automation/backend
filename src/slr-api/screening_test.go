@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gofrs/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
@@ -84,20 +85,21 @@ func (s *ScreenTestSuite) TestAccuracyLargeSet() {
 
 	modelID := uuid.Must(uuid.NewV4())
 
-	training := 5
-
+	training := 40
 	trainedSet := []int{}
 	for i, art := range testData {
-		if i > training {
+		if i > training-1 {
 			break
 		}
 		trainedSet = append(trainedSet, i)
 		err := TrainModel(modelID, art.Abstract, art.Title, art.Include)
 		s.Require().NoError(err)
 	}
+	spew.Dump(trainedSet)
 
 	abstractAccuracy := &AccuracyScore{Total: len(testData) - len(trainedSet)}
 	titleAccuracy := &AccuracyScore{Total: len(testData) - len(trainedSet)}
+	titleAndAbstractAccuracy := &AccuracyScore{Total: len(testData) - len(trainedSet)}
 
 	for i, art := range testData {
 		if isInTrainedSet(trainedSet, i) {
@@ -107,14 +109,18 @@ func (s *ScreenTestSuite) TestAccuracyLargeSet() {
 		s.Require().NoError(err)
 		abstractAccuracy.verifyResult(art.Include, res.Abstract.Class)
 		titleAccuracy.verifyResult(art.Include, res.Title.Class)
-
+		titleAndAbstractAccuracy.verifyResult(art.Include, res.AbstractAndTitle.Class)
 		if i%50 == 0 {
+			log.Infof("Title and Abstract:")
+			titleAndAbstractAccuracy.PrintAccuracy()
 			log.Infof("Abstract:")
 			abstractAccuracy.PrintAccuracy()
 			log.Infof("Title:")
 			titleAccuracy.PrintAccuracy()
 		}
 	}
+	log.Infof("Title and Abstract:")
+	titleAndAbstractAccuracy.PrintAccuracy()
 	log.Infof("Abstract:")
 	abstractAccuracy.PrintAccuracy()
 	log.Infof("Title:")
