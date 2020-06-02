@@ -47,6 +47,7 @@ func (c *ProjectController) ProcessCSV(tx *gorm.DB, projectID uuid.UUID, input s
 		article := models.Article{
 			ProjectID:   projectID,
 			CitedAmount: -1,
+			Status:      models.ArticleStatusUnprocessed,
 			Keywords:    []byte("[]"),
 			Metadata:    []byte("{}"),
 			CitedBy:     []byte("[]"),
@@ -56,7 +57,7 @@ func (c *ProjectController) ProcessCSV(tx *gorm.DB, projectID uuid.UUID, input s
 			case "title":
 				article.Title = record[v]
 			case "abstract":
-				article.Title = record[v]
+				article.Abstract = record[v]
 			case "doi":
 				article.Doi = record[v]
 			case "url":
@@ -90,6 +91,12 @@ func (c *ProjectController) VerifyFirstRow(elements []string) (map[string]int, e
 			columnMapper["title"] = i
 		case "year":
 			columnMapper["year"] = i
+		case "abstract":
+			columnMapper["abstract"] = i
+		case "url":
+			columnMapper["url"] = i
+		case "doi":
+			columnMapper["doi"] = i
 		default:
 			return nil, fmt.Errorf("incorrect column name provided: %s", e)
 		}

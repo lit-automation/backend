@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/cdipaolo/goml/base"
 	"github.com/cdipaolo/goml/text"
@@ -26,11 +24,12 @@ const (
 func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*app.Articlescreening, error) {
 	wg := &sync.WaitGroup{}
 	var doc *prose.Document
-	now := time.Now()
 	wg.Add(2)
+	var abstractSanitized string
+	var titleSanitized string
 	go func() {
 		var err error
-		abstract, doc, err = SanitizeText(abstract)
+		abstractSanitized, doc, err = SanitizeText(abstract)
 		if err != nil {
 			panic(err)
 		}
@@ -38,14 +37,13 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 	}()
 	go func() {
 		var err error
-		title, _, err = SanitizeText(title)
+		titleSanitized, _, err = SanitizeText(title)
 		if err != nil {
 			panic(err)
 		}
 		wg.Done()
 	}()
 	wg.Wait()
-	fmt.Println("dur", time.Since(now))
 	stream := make(chan base.TextDatapoint, 100)
 	errors := make(chan error)
 
@@ -74,7 +72,7 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 	p := float64(0)
 	res := &app.Articlescreening{}
 	if docuCount > 0 {
-		class, p = model.Probability(abstract)
+		class, p = model.Probability(abstractSanitized)
 	}
 	res.Abstract = &app.Textpredictmedia{
 		Class:      getClass(class),
@@ -82,7 +80,7 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 		Text:       abstract,
 	}
 	if docuCount > 0 {
-		class, p = model.Probability(title + " " + abstract)
+		class, p = model.Probability(titleSanitized + " " + abstractSanitized)
 	}
 	res.AbstractAndTitle = &app.Textpredictmedia{
 		Class:      getClass(class),
@@ -90,7 +88,7 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 		Text:       abstract,
 	}
 	if docuCount > 0 {
-		class, p = model.Probability(title)
+		class, p = model.Probability(titleSanitized)
 	}
 	res.Title = &app.Textpredictmedia{
 		Class:      getClass(class),
