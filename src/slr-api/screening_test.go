@@ -23,7 +23,7 @@ type ScreenTestSuite struct {
 }
 
 func (s *ScreenTestSuite) TestAccuracySmallSet() {
-	file, err := ioutil.ReadFile("testdata/article_set_small.json")
+	file, err := ioutil.ReadFile("testdata/article_set_small_logging.json")
 	s.Require().NoError(err)
 	testData := []TestArticle{}
 	err = json.Unmarshal([]byte(file), &testData)
@@ -77,7 +77,7 @@ type AccuracyScore struct {
 }
 
 func (s *ScreenTestSuite) TestAccuracyLargeSet() {
-	file, err := ioutil.ReadFile("testdata/article_set_large.json")
+	file, err := ioutil.ReadFile("testdata/article_set_large_logging.json")
 	s.Require().NoError(err)
 	testData := []TestArticle{}
 	err = json.Unmarshal([]byte(file), &testData)
