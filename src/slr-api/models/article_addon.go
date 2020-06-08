@@ -198,12 +198,32 @@ func (m *ArticleDB) ListPaginated(ctx *app.ListArticleContext, projectID uuid.UU
 	return objs, count.Count, nil
 }
 
+// SetDuplicates adjust status of article id list to duplicates
+func (m *ArticleDB) SetDuplicates(ctx context.Context, articleIDs []uuid.UUID) error {
+	defer goa.MeasureSince([]string{"goa", "db", "article", "setduplicates"}, time.Now())
+
+	return m.Db.Exec("UPDATE articles SET status = ? WHERE articles.id IN (?)", ArticleStatusDuplicate, articleIDs).Error
+}
+
 // List returns an array of Article
 func (m *ArticleDB) ListForProject(ctx context.Context, projectID uuid.UUID) ([]*Article, error) {
 	defer goa.MeasureSince([]string{"goa", "db", "article", "list"}, time.Now())
 
 	var objs []*Article
 	err := m.Db.Table(m.TableName()).Where("project_id = ?", projectID).Find(&objs).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return objs, nil
+}
+
+// ListNonDuplicatesForProject returns an array of Article
+func (m *ArticleDB) ListNonDuplicatesForProject(ctx context.Context, projectID uuid.UUID) ([]*Article, error) {
+	defer goa.MeasureSince([]string{"goa", "db", "article", "list"}, time.Now())
+
+	var objs []*Article
+	err := m.Db.Table(m.TableName()).Where("project_id = ? AND status != ?", projectID, ArticleStatusDuplicate).Find(&objs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

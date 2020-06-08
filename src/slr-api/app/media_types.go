@@ -152,6 +152,13 @@ func (mt *Articlesmallmedia) Validate() (err error) {
 	return
 }
 
+// Media type used to indicate how many duplicates are removed (default view)
+//
+// Identifier: application/vnd.dupl+json; view=default
+type Dupl struct {
+	Duplicates int `form:"duplicates" json:"duplicates" yaml:"duplicates" xml:"duplicates"`
+}
+
 // Graphmedia media type (default view)
 //
 // Identifier: application/vnd.graphmedia+json; view=default

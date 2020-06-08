@@ -128,9 +128,7 @@ var _ = Resource("article", func() {
 		Routing(
 			GET("download"),
 		)
-		Response(OK, func() {
-
-		})
+		Response(OK)
 		Response(NotFound)
 		Response(InternalServerError)
 		Response(BadRequest, ErrorMedia)
@@ -218,12 +216,22 @@ var _ = Resource("project", func() {
 		Response(InternalServerError)
 		Response(BadRequest, ErrorMedia)
 	})
+	Action("removeDuplicates", func() {
+		Routing(
+			POST("/:projectID/removeduplicates"),
+		)
+		Params(func() {
+			Param("projectID", UUID, "Project ID")
+		})
+		Response(OK, func() {
+			Media(DuplicateMedia)
+		})
+		Response(NotFound)
+		Response(InternalServerError)
+		Response(BadRequest, ErrorMedia)
+	})
 })
 
-// TODO:  delete project routes
-// TODO: Add invite user to project route
-
-// TODO: Add update user route
 var _ = Resource("user", func() {
 	Security(JWT, func() { // Use JWT to auth requests to this endpoint
 		Scope("api:access") // Enforce presence of "api" scope in JWT claims.

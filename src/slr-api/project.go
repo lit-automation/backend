@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/goadesign/goa"
+	"github.com/gofrs/uuid"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/packages/database"
@@ -212,6 +213,71 @@ func (c *ProjectController) List(ctx *app.ListProjectContext) error {
 	return ctx.OK(res)
 
 	// ProjectController_List: end_implement
+}
+
+// RemoveDuplicates runs the removeDuplicates action.
+func (c *ProjectController) RemoveDuplicates(ctx *app.RemoveDuplicatesProjectContext) error {
+	// ProjectController_RemoveDuplicates: start_implement
+
+	dois := make(map[string][]uuid.UUID)
+	articles, err := DB.ArticleDB.ListNonDuplicatesForProject(ctx, ctx.ProjectID)
+	if err != nil {
+		log.WithError(err).WithField(logfields.ProjectID, ctx.ProjectID).Error("unable to list articles for project")
+		return ctx.InternalServerError()
+	}
+	// Put your logic here
+	for _, article := range articles {
+		if article.Doi == "" {
+			continue
+		}
+		dois[article.Doi] = append(dois[article.Doi], article.ID)
+	}
+	toDuplicate := []uuid.UUID{}
+	for _, v := range dois {
+		if len(v) > 1 {
+			for i := 1; i < len(v); i++ {
+				toDuplicate = append(toDuplicate, v[i])
+			}
+		}
+	}
+	err = DB.ArticleDB.SetDuplicates(ctx, toDuplicate)
+	if err != nil {
+		log.WithError(err).WithField(logfields.ProjectID, ctx.ProjectID).Error("unable to set article status duplicates")
+		return ctx.InternalServerError()
+	}
+	articles, err = DB.ArticleDB.ListNonDuplicatesForProject(ctx, ctx.ProjectID)
+	if err != nil {
+		log.WithError(err).WithField(logfields.ProjectID, ctx.ProjectID).Error("unable to list articles for project")
+		return ctx.InternalServerError()
+	}
+
+	titles := make(map[string][]uuid.UUID)
+	for _, article := range articles {
+		if article.Doi == "" {
+			continue
+		}
+		titles[article.Title] = append(titles[article.Title], article.ID)
+	}
+	toDuplicateTitles := []uuid.UUID{}
+	for _, v := range titles {
+		if len(v) > 1 {
+			for i := 1; i < len(v); i++ {
+				toDuplicateTitles = append(toDuplicateTitles, v[i])
+			}
+		}
+	}
+	err = DB.ArticleDB.SetDuplicates(ctx, toDuplicateTitles)
+	if err != nil {
+		log.WithError(err).WithField(logfields.ProjectID, ctx.ProjectID).Error("unable to set article status duplicates")
+		return ctx.InternalServerError()
+	}
+
+	res := &app.Dupl{
+		Duplicates: len(toDuplicate) + len(toDuplicateTitles),
+	}
+	return ctx.OK(res)
+
+	// ProjectController_RemoveDuplicates: end_implement
 }
 
 // Show runs the show action.

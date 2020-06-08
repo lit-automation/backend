@@ -355,6 +355,7 @@ type ProjectController interface {
 	Graph(*GraphProjectContext) error
 	Latest(*LatestProjectContext) error
 	List(*ListProjectContext) error
+	RemoveDuplicates(*RemoveDuplicatesProjectContext) error
 	Show(*ShowProjectContext) error
 	Update(*UpdateProjectContext) error
 }
@@ -368,6 +369,7 @@ func MountProjectController(service *goa.Service, ctrl ProjectController) {
 	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/graph", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
 	service.Mux.Handle("OPTIONS", "/v1/project/latest", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
 	service.Mux.Handle("OPTIONS", "/v1/project/list", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/removeduplicates", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
 	service.Mux.Handle("OPTIONS", "/v1/project/:projectID", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
@@ -466,6 +468,23 @@ func MountProjectController(service *goa.Service, ctrl ProjectController) {
 	h = handleProjectOrigin(h)
 	service.Mux.Handle("GET", "/v1/project/list", ctrl.MuxHandler("list", h, nil))
 	service.LogInfo("mount", "ctrl", "Project", "action", "List", "route", "GET /v1/project/list", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewRemoveDuplicatesProjectContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.RemoveDuplicates(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleProjectOrigin(h)
+	service.Mux.Handle("POST", "/v1/project/:projectID/removeduplicates", ctrl.MuxHandler("removeDuplicates", h, nil))
+	service.LogInfo("mount", "ctrl", "Project", "action", "RemoveDuplicates", "route", "POST /v1/project/:projectID/removeduplicates", "security", "jwt")
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request

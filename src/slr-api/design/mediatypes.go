@@ -208,3 +208,15 @@ var MostImportantWordsMedia = MediaType("application/vnd.mostimportantwordsmedia
 		Attribute("tf_idf")
 	})
 })
+
+// DuplicateMedia media type for duplication removal
+var DuplicateMedia = MediaType("application/vnd.dupl+json", func() {
+	Description("Media type used to indicate how many duplicates are removed")
+	Attributes(func() {
+		Attribute("duplicates", Integer)
+		Required("duplicates")
+	})
+	View("default", func() {
+		Attribute("duplicates")
+	})
+})
