@@ -1,5 +1,5 @@
 
-phony: all generate lint
+phony: all generate lint run docker-build docker-run
 
 GOBIN = $(GOPATH)/bin
 GOAGEN = $(GOBIN)/goagen
@@ -21,3 +21,10 @@ lint: | $(GOLANGCI_LINT)
 run:
 	@go build ./src/slr-api
 	@./slr-api
+
+docker-build:
+	@docker build -f ./Dockerfile-builder -t slr-builder .
+	@docker build --build-arg base_img=slr-builder -f ./Dockerfile -t slr-api .
+
+docker-run:
+	@docker run -e JWT_KEY=${JWT_KEY} -e JWT_KEY_PUB=${JWT_KEY_PUB} -e PG_HOST=${PG_HOST} -e PG_PASSWORD=${PG_PASSWORD} -e PG_USERNAME=${PG_USERNAME} -p 9001:9001 slr-api
