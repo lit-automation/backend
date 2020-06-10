@@ -10,6 +10,6 @@ FROM frolvlad/alpine-glibc
 RUN apk --no-cache add ca-certificates tzdata && update-ca-certificates
 
 COPY --from=builder /app/src/slr-api/bin/main /
-EXPOSE 9001
+EXPOSE 8000
 STOPSIGNAL SIGTERM
 CMD ["./main"]

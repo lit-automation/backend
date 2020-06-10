@@ -10,6 +10,11 @@ Assumming you've installed [Golang](https://golang.org/doc/install)
 2. Make sure the environment is available in your terminal(`source yourfile.env`)
 3. Execute: `make run`
 
+# Docker
+
+1. Build using `make docker-build`
+2. Running the image: `docker run -e JWT_KEY=$JWT_KEY -e JWT_KEY_PUB=$JWT_KEY_PUB -e PG_HOST=$PG_HOST -e PG_PASSWORD=$PG_PASSWORD -e PG_USERNAME=$PG_USERNAME -p <your-exposing-port>:8000 slr-api` 
+
 # Contributions
 
 Got any improvements? Feel free to create a Pull request.
