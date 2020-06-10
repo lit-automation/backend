@@ -9,3 +9,5 @@ Makefile
 screening-models
 testdatacreator
 abstract-enhancer
+test.csv
+*.json
