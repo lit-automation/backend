@@ -292,4 +292,15 @@ var _ = Resource("screening", func() {
 		Response(InternalServerError)
 		Response(BadRequest, ErrorMedia)
 	})
+	Action("auto", func() {
+		Routing(
+			POST("auto"),
+		)
+		Response(OK, func() {
+			Media(AutoScreenAbstract)
+		})
+		Response(NotFound)
+		Response(InternalServerError)
+		Response(BadRequest, ErrorMedia)
+	})
 })

@@ -33,6 +33,7 @@ type Article struct {
 	CreatedAt          time.Time
 	DeletedAt          *time.Time
 	Doi                string
+	FullText           string
 	GotPdf             bool
 	Journal            string
 	Keywords           []byte `sql:"type:jsonb"`

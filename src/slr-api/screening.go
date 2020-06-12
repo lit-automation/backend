@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+
 	"github.com/goadesign/goa"
 	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
@@ -18,23 +20,49 @@ func NewScreeningController(service *goa.Service) *ScreeningController {
 	return &ScreeningController{Controller: service.NewController("ScreeningController")}
 }
 
+// Auto runs the auto action.
+func (c *ScreeningController) Auto(ctx *app.AutoScreeningContext) error {
+	// ScreeningController_Auto: start_implement
+
+	err := VerifyModel(ctx.ProjectID)
+	if err != nil {
+		return ErrBadRequest(err)
+	}
+
+	screeningChan <- ctx.ProjectID
+	articles, err := DB.ArticleDB.ListOnStatus(context.Background(), ctx.ProjectID, models.ArticleStatusUnprocessed)
+	if err != nil {
+		log.Errorf("Err listing: %s", err)
+	}
+	result := fmt.Sprintf("Screening will take approximatly %d seconds", len(articles)/3)
+
+	res := &app.Autoscreenabstract{
+		Message: result,
+	}
+	return ctx.OK(res)
+
+	// ScreeningController_Auto: end_implement
+}
+
 // Show runs the show action.
 func (c *ScreeningController) Show(ctx *app.ShowScreeningContext) error {
 	// ScreeningController_Show: start_implement
 
-	// projectID, err := c.ProjectIDFromContext(ctx, ctx.ProjectID)
-	// if err != nil {
-	// 	return err
-	// }
-	// TODO add security for article & project
+	projectID, err := ProjectIDFromContext(ctx, ctx.ProjectID)
+	if err != nil {
+		return err
+	}
 	article, err := DB.ArticleDB.Get(ctx, ctx.ArticleID)
 	if err != nil {
-		return ctx.BadRequest(fmt.Errorf("Article not found"))
+		return ErrBadRequest(fmt.Errorf("Article not found"))
+	}
+	if article.ProjectID != projectID {
+		return ctx.BadRequest(fmt.Errorf("Incorrect article ID"))
 	}
 	if article.Title == "" || article.Abstract == "" {
 		return ErrBadRequest("Both title and abstract needs to be present before screening of articles")
 	}
-	res, err := GetScreeningMediaForProject(ctx.ProjectID, article.Title, article.Abstract)
+	res, err := GetScreeningMediaForProject(projectID, article.Title, article.Abstract)
 	if err != nil {
 		log.WithError(err).Error("unable to retrieve screening media")
 		return ctx.InternalServerError()
@@ -48,10 +76,19 @@ func (c *ScreeningController) Show(ctx *app.ShowScreeningContext) error {
 // Update runs the update action.
 func (c *ScreeningController) Update(ctx *app.UpdateScreeningContext) error {
 	// ScreeningController_Update: start_implement
-
+	projectID, err := ProjectIDFromContext(ctx, ctx.ProjectID)
+	if err != nil {
+		return err
+	}
 	article, err := DB.ArticleDB.Get(ctx, ctx.ArticleID)
 	if err != nil {
-		return ctx.BadRequest(fmt.Errorf("Article not found"))
+		return ErrBadRequest(fmt.Errorf("Article not found"))
+	}
+	if article.ProjectID != projectID {
+		return ctx.NotFound()
+	}
+	if article.Status != models.ArticleStatusUnprocessed {
+		return ErrBadRequest(fmt.Errorf("This article is not unprocessed and therefore can't be used to train the model"))
 	}
 	err = TrainModel(ctx.ProjectID, article.Title, article.Abstract, ctx.Payload.Include)
 	if err != nil {

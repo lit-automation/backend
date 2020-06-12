@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"io/ioutil"
 	"sort"
 	"strings"
@@ -11,6 +13,7 @@ import (
 	"github.com/reiver/go-porterstemmer"
 	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
+	"github.com/wimspaargaren/slr-automation/src/slr-api/models"
 	"gopkg.in/jdkato/prose.v2"
 )
 
@@ -24,6 +27,38 @@ const (
 	ClassTypeExclude ClassType = 0
 	ClassTypeInclude ClassType = 1
 )
+
+// VerifyModel verifies if the model is ready for automatic screening
+func VerifyModel(projectID uuid.UUID) error {
+	stream := make(chan base.TextDatapoint, 100)
+	errors := make(chan error)
+
+	model := text.NewNaiveBayes(stream, 2, base.OnlyWords)
+
+	model.Output = ioutil.Discard
+	go model.OnlineLearn(errors)
+	err := model.RestoreFromFile("screening-models/" + projectID.String())
+	if err != nil {
+		return fmt.Errorf("No model for article set yet")
+	}
+
+	close(stream)
+	for {
+		err, more := <-errors
+		if more {
+			log.Errorf("Error passed: %v", err)
+		} else {
+			// training is done!
+			break
+		}
+	}
+	for _, p := range model.Probabilities {
+		if p == 0 {
+			return fmt.Errorf("Both an included and excluded example should be provided to the model")
+		}
+	}
+	return nil
+}
 
 // GetScreeningMediaForProject retrieve the predicted values for given article
 func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*app.Articlescreening, error) {
@@ -78,19 +113,21 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 	if docuCount > 0 {
 		class, p = model.Probability(sentenceTFIDF)
 	}
-	res.Abstract = &app.Textpredictmedia{
+	res.Tfidf = &app.Titleabstractpredictmedia{
 		Class:      getClass(class),
 		Confidence: p,
-		Text:       abstract,
+		Abstract:   abstract,
+		Title:      title,
 	}
 	if docuCount > 0 {
 		class, p = model.Probability(sentenceTF)
 
 	}
-	res.AbstractAndTitle = &app.Textpredictmedia{
+	res.Tf = &app.Titleabstractpredictmedia{
 		Class:      getClass(class),
 		Confidence: p,
-		Text:       abstract,
+		Title:      title,
+		Abstract:   abstract,
 	}
 
 	for _, sentence := range doc.Sentences() {
@@ -258,4 +295,34 @@ func SanitizeToken(tok prose.Token) string {
 	}
 	stem := porterstemmer.StemString(tok.Text)
 	return stem
+}
+
+var screeningChan chan (uuid.UUID)
+
+func autoScreen() {
+	for {
+		projectID := <-screeningChan
+		articles, err := DB.ArticleDB.ListOnStatus(context.Background(), projectID, models.ArticleStatusUnprocessed)
+		if err != nil {
+			log.Errorf("Err listing: %s", err)
+			continue
+		}
+		for _, article := range articles {
+			if article.Title == "" || article.Abstract == "" {
+				continue
+			}
+			res, err := GetScreeningMediaForProject(projectID, article.Title, article.Abstract)
+			if err != nil {
+				log.Errorf("Err predicting: %s", err)
+			}
+			article.Status = models.ArticleStatusUseful
+			if res.Tfidf.Class == "Exclude" {
+				article.Status = models.ArticleStatusNotUseful
+			}
+			err = DB.ArticleDB.Update(context.Background(), article)
+			if err != nil {
+				log.Errorf("Unable to update article status: %s", err)
+			}
+		}
+	}
 }

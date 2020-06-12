@@ -592,6 +592,7 @@ func unmarshalUpdateProjectPayload(ctx context.Context, service *goa.Service, re
 // ScreeningController is the controller interface for the Screening actions.
 type ScreeningController interface {
 	goa.Muxer
+	Auto(*AutoScreeningContext) error
 	Show(*ShowScreeningContext) error
 	Update(*UpdateScreeningContext) error
 }
@@ -600,7 +601,24 @@ type ScreeningController interface {
 func MountScreeningController(service *goa.Service, ctrl ScreeningController) {
 	initService(service)
 	var h goa.Handler
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/screen/auto", ctrl.MuxHandler("preflight", handleScreeningOrigin(cors.HandlePreflight()), nil))
 	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/screen/:articleID", ctrl.MuxHandler("preflight", handleScreeningOrigin(cors.HandlePreflight()), nil))
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewAutoScreeningContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Auto(rctx)
+	}
+	h = handleScreeningOrigin(h)
+	service.Mux.Handle("POST", "/v1/project/:projectID/screen/auto", ctrl.MuxHandler("auto", h, nil))
+	service.LogInfo("mount", "ctrl", "Screening", "action", "Auto", "route", "POST /v1/project/:projectID/screen/auto")
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request

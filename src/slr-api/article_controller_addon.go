@@ -9,7 +9,7 @@ import (
 	"github.com/wimspaargaren/slr-automation/src/packages/logfields"
 )
 
-func (c *ArticleController) ProjectIDFromContext(ctx context.Context, projectID uuid.UUID) (uuid.UUID, error) {
+func ProjectIDFromContext(ctx context.Context, projectID uuid.UUID) (uuid.UUID, error) {
 	userID, err := userIDFromContext(ctx)
 	if err != nil {
 		return uuid.Nil, ErrUnauthorized("Should be logged in to retrieve projects")

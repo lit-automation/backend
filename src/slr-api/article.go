@@ -2,15 +2,16 @@ package main
 
 import (
 	"encoding/csv"
+	"io"
+	"os"
+	"strconv"
+
 	"github.com/goadesign/goa"
 	"github.com/gofrs/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/packages/logfields"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/models"
-	"io"
-	"os"
-	"strconv"
 )
 
 // ArticleController implements the article resource.
@@ -27,7 +28,7 @@ func NewArticleController(service *goa.Service) *ArticleController {
 func (c *ArticleController) Create(ctx *app.CreateArticleContext) error {
 	// ArticleController_Create: start_implement
 
-	projectID, err := c.ProjectIDFromContext(ctx, ctx.ProjectID)
+	projectID, err := ProjectIDFromContext(ctx, ctx.ProjectID)
 	if err != nil {
 		return err
 	}
@@ -56,7 +57,7 @@ func (c *ArticleController) Create(ctx *app.CreateArticleContext) error {
 func (c *ArticleController) Delete(ctx *app.DeleteArticleContext) error {
 	// ArticleController_Delete: start_implement
 
-	projectID, err := c.ProjectIDFromContext(ctx, ctx.ProjectID)
+	projectID, err := ProjectIDFromContext(ctx, ctx.ProjectID)
 	if err != nil {
 		return err
 	}
@@ -222,7 +223,7 @@ func (c *ArticleController) Snowball(ctx *app.SnowballArticleContext) error {
 func (c *ArticleController) Update(ctx *app.UpdateArticleContext) error {
 	// ArticleController_Update: start_implement
 
-	projectID, err := c.ProjectIDFromContext(ctx, ctx.ProjectID)
+	projectID, err := ProjectIDFromContext(ctx, ctx.ProjectID)
 	if err != nil {
 		return err
 	}

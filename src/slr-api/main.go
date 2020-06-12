@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/middleware"
+	"github.com/gofrs/uuid"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/wimspaargaren/slr-automation/src/packages/environment"
@@ -30,6 +31,9 @@ func main() {
 	DB = NewDBManagaer(db)
 	// Run cron to gather additional article info
 	go enhanceArticles()
+
+	screeningChan = make(chan uuid.UUID, 500)
+	go autoScreen()
 
 	// Create service
 	service := goa.New("SLR Automation")

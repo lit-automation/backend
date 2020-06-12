@@ -59,8 +59,8 @@ func (s *ScreenTestSuite) TestAccuracySmallSet() {
 	for _, art := range testData {
 		res, err := GetScreeningMediaForProject(modelID, art.Title, art.Abstract)
 		s.Require().NoError(err)
-		tfIDFAccuracy.verifyResult(art.Include, res.Abstract.Class)
-		tfAccuracy.verifyResult(art.Include, res.AbstractAndTitle.Class)
+		tfIDFAccuracy.verifyResult(art.Include, res.Tfidf.Class)
+		tfAccuracy.verifyResult(art.Include, res.Tf.Class)
 	}
 
 	s.Equal(9, tfIDFAccuracy.Correct)
@@ -244,8 +244,8 @@ func (s *ScreenTestSuite) predict(testData []TestArticle, trainedSet []int, mode
 		processed++
 		res, err := GetScreeningMediaForProject(modelID, art.Title, art.Abstract)
 		s.Require().NoError(err)
-		tfIDFAccuracy.verifyResult(art.Include, res.Abstract.Class)
-		termFrequencyAccuracy.verifyResult(art.Include, res.AbstractAndTitle.Class)
+		tfIDFAccuracy.verifyResult(art.Include, res.Tfidf.Class)
+		termFrequencyAccuracy.verifyResult(art.Include, res.Tf.Class)
 	}
 	log.Infof("TF:")
 	termFrequencyAccuracy.PrintAccuracy()

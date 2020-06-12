@@ -231,6 +231,19 @@ func (m *ArticleDB) ListNonDuplicatesForProject(ctx context.Context, projectID u
 	return objs, nil
 }
 
+// ListOnStatus returns an array of Article
+func (m *ArticleDB) ListOnStatus(ctx context.Context, projectID uuid.UUID, status ArticleStatus) ([]*Article, error) {
+	defer goa.MeasureSince([]string{"goa", "db", "article", "list"}, time.Now())
+
+	var objs []*Article
+	err := m.Db.Table(m.TableName()).Where("project_id = ? AND status = ?", projectID, status).Find(&objs).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return objs, nil
+}
+
 func (m *ArticleDB) ListNotChecked(ctx context.Context) ([]*Article, error) {
 	var objs []*Article
 	err := m.Db.Table(m.TableName()).Where("checked_by_crossref = false OR checked_by_crossref IS NULL").Limit(50).Find(&objs).Error

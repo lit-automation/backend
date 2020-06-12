@@ -168,18 +168,16 @@ var ArticleScreeningMedia = MediaType("application/vnd.articlescreening+json", f
 	Description("Article Screening mediatype")
 	Attributes(func() {
 		Attribute("id", UUID)
-		Attribute("title", TextPredictMedia)
-		Attribute("abstract", TextPredictMedia)
-		Attribute("abstract_and_title", TextPredictMedia)
+		Attribute("tf", TitleAbstractPredictMedia)
+		Attribute("tfidf", TitleAbstractPredictMedia)
 		Attribute("sentences", ArrayOf(TextPredictMedia))
 		Attribute("most_important_words", ArrayOf(MostImportantWordsMedia))
-		Required("id", "title", "abstract", "sentences", "abstract_and_title", "most_important_words")
+		Required("id", "tf", "tfidf", "sentences", "most_important_words")
 	})
 	View("default", func() {
 		Attribute("id")
-		Attribute("title")
-		Attribute("abstract")
-		Attribute("abstract_and_title")
+		Attribute("tf")
+		Attribute("tfidf")
 		Attribute("sentences")
 		Attribute("most_important_words")
 	})
@@ -192,6 +190,20 @@ var TextPredictMedia = MediaType("application/vnd.textpredictmedia+json", func()
 	Required("text", "class", "confidence")
 	View("default", func() {
 		Attribute("text")
+		Attribute("class")
+		Attribute("confidence")
+	})
+})
+
+var TitleAbstractPredictMedia = MediaType("application/vnd.titleabstractpredictmedia+json", func() {
+	Attribute("title", String)
+	Attribute("abstract", String)
+	Attribute("class", String)
+	Attribute("confidence", Number)
+	Required("title", "abstract", "class", "confidence")
+	View("default", func() {
+		Attribute("title")
+		Attribute("abstract")
 		Attribute("class")
 		Attribute("confidence")
 	})
@@ -218,5 +230,16 @@ var DuplicateMedia = MediaType("application/vnd.dupl+json", func() {
 	})
 	View("default", func() {
 		Attribute("duplicates")
+	})
+})
+
+// AutoScreenAbstract media type for automatic screening of abstract
+var AutoScreenAbstract = MediaType("application/vnd.autoscreenabstract+json", func() {
+	Attributes(func() {
+		Attribute("message", String)
+		Required("message")
+	})
+	View("default", func() {
+		Attribute("message")
 	})
 })

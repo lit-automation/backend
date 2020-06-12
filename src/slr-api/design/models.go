@@ -50,6 +50,7 @@ var _ = StorageGroup("slrautomation", func() {
 			Field("abstract", gorma.String)
 			Field("language", gorma.String)
 			Field("type", gorma.String)
+			Field("full_text", gorma.String)
 			Field("query", gorma.String)
 			Field("query_platform", gorma.String)
 			Field("authors", gorma.String)

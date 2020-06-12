@@ -66,41 +66,27 @@ func (mt *Articlemetadata) Validate() (err error) {
 //
 // Identifier: application/vnd.articlescreening+json; view=default
 type Articlescreening struct {
-	Abstract           *Textpredictmedia          `form:"abstract" json:"abstract" yaml:"abstract" xml:"abstract"`
-	AbstractAndTitle   *Textpredictmedia          `form:"abstract_and_title" json:"abstract_and_title" yaml:"abstract_and_title" xml:"abstract_and_title"`
 	ID                 uuid.UUID                  `form:"id" json:"id" yaml:"id" xml:"id"`
 	MostImportantWords []*Mostimportantwordsmedia `form:"most_important_words" json:"most_important_words" yaml:"most_important_words" xml:"most_important_words"`
 	Sentences          []*Textpredictmedia        `form:"sentences" json:"sentences" yaml:"sentences" xml:"sentences"`
-	Title              *Textpredictmedia          `form:"title" json:"title" yaml:"title" xml:"title"`
+	Tf                 *Titleabstractpredictmedia `form:"tf" json:"tf" yaml:"tf" xml:"tf"`
+	Tfidf              *Titleabstractpredictmedia `form:"tfidf" json:"tfidf" yaml:"tfidf" xml:"tfidf"`
 }
 
 // Validate validates the Articlescreening media type instance.
 func (mt *Articlescreening) Validate() (err error) {
 
-	if mt.Title == nil {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "title"))
+	if mt.Tf == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "tf"))
 	}
-	if mt.Abstract == nil {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "abstract"))
+	if mt.Tfidf == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "tfidf"))
 	}
 	if mt.Sentences == nil {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "sentences"))
 	}
-	if mt.AbstractAndTitle == nil {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "abstract_and_title"))
-	}
 	if mt.MostImportantWords == nil {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "most_important_words"))
-	}
-	if mt.Abstract != nil {
-		if err2 := mt.Abstract.Validate(); err2 != nil {
-			err = goa.MergeErrors(err, err2)
-		}
-	}
-	if mt.AbstractAndTitle != nil {
-		if err2 := mt.AbstractAndTitle.Validate(); err2 != nil {
-			err = goa.MergeErrors(err, err2)
-		}
 	}
 	for _, e := range mt.MostImportantWords {
 		if e != nil {
@@ -116,8 +102,13 @@ func (mt *Articlescreening) Validate() (err error) {
 			}
 		}
 	}
-	if mt.Title != nil {
-		if err2 := mt.Title.Validate(); err2 != nil {
+	if mt.Tf != nil {
+		if err2 := mt.Tf.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	if mt.Tfidf != nil {
+		if err2 := mt.Tfidf.Validate(); err2 != nil {
 			err = goa.MergeErrors(err, err2)
 		}
 	}
@@ -148,6 +139,21 @@ func (mt *Articlesmallmedia) Validate() (err error) {
 	}
 	if mt.URL == "" {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "url"))
+	}
+	return
+}
+
+// Autoscreenabstract media type (default view)
+//
+// Identifier: application/vnd.autoscreenabstract+json; view=default
+type Autoscreenabstract struct {
+	Message string `form:"message" json:"message" yaml:"message" xml:"message"`
+}
+
+// Validate validates the Autoscreenabstract media type instance.
+func (mt *Autoscreenabstract) Validate() (err error) {
+	if mt.Message == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "message"))
 	}
 	return
 }
@@ -293,6 +299,31 @@ type Textpredictmedia struct {
 func (mt *Textpredictmedia) Validate() (err error) {
 	if mt.Text == "" {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "text"))
+	}
+	if mt.Class == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "class"))
+	}
+
+	return
+}
+
+// Titleabstractpredictmedia media type (default view)
+//
+// Identifier: application/vnd.titleabstractpredictmedia+json; view=default
+type Titleabstractpredictmedia struct {
+	Abstract   string  `form:"abstract" json:"abstract" yaml:"abstract" xml:"abstract"`
+	Class      string  `form:"class" json:"class" yaml:"class" xml:"class"`
+	Confidence float64 `form:"confidence" json:"confidence" yaml:"confidence" xml:"confidence"`
+	Title      string  `form:"title" json:"title" yaml:"title" xml:"title"`
+}
+
+// Validate validates the Titleabstractpredictmedia media type instance.
+func (mt *Titleabstractpredictmedia) Validate() (err error) {
+	if mt.Title == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "title"))
+	}
+	if mt.Abstract == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "abstract"))
 	}
 	if mt.Class == "" {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "class"))
