@@ -88,7 +88,7 @@ func (c *ProjectController) ProcessCSV(tx *gorm.DB, projectID uuid.UUID, input s
 func (c *ProjectController) VerifyFirstRow(elements []string) (map[string]int, error) {
 	columnMapper := make(map[string]int)
 	for i, e := range elements {
-		switch strings.ToLower(e) {
+		switch strings.TrimSpace(strings.ToLower(e)) {
 		case "title":
 			columnMapper["title"] = i
 		case "year":

@@ -94,6 +94,7 @@ func userIDFromContext(ctx context.Context) (uuid.UUID, error) {
 		return uuid.Nil, fmt.Errorf("forcing failure because token is missing")
 	}
 	claims := token.Claims.(jwtgo.MapClaims)
+
 	userIDString := claims["sub"].(string)
 	if userIDString == "" {
 		return uuid.Nil, fmt.Errorf("no user id specified in token")

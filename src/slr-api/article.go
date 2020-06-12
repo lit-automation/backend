@@ -2,16 +2,15 @@ package main
 
 import (
 	"encoding/csv"
-	"io"
-	"os"
-	"strconv"
-
 	"github.com/goadesign/goa"
 	"github.com/gofrs/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/packages/logfields"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/models"
+	"io"
+	"os"
+	"strconv"
 )
 
 // ArticleController implements the article resource.

@@ -261,6 +261,9 @@ var _ = Resource("user", func() {
 })
 
 var _ = Resource("screening", func() {
+	Security(JWT, func() { // Use JWT to auth requests to this endpoint
+		Scope("api:access") // Enforce presence of "api" scope in JWT claims.
+	})
 	Parent("project")
 	BasePath("/screen")
 	DefaultMedia(ArticleScreeningMedia)

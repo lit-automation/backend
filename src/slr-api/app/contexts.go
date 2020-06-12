@@ -18,6 +18,714 @@ import (
 	"strconv"
 )
 
+// CreateArticleContext provides the article create action context.
+type CreateArticleContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	ProjectID uuid.UUID
+	Payload   *CreateArticlePayload
+}
+
+// NewCreateArticleContext parses the incoming request URL and body, performs validations and creates the
+// context used by the article controller create action.
+func NewCreateArticleContext(ctx context.Context, r *http.Request, service *goa.Service) (*CreateArticleContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := CreateArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramProjectID := req.Params["projectID"]
+	if len(paramProjectID) > 0 {
+		rawProjectID := paramProjectID[0]
+		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
+			rctx.ProjectID = projectID
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
+		}
+	}
+	return &rctx, err
+}
+
+// createArticlePayload is the article create action payload.
+type createArticlePayload struct {
+	Abstract           *string `form:"abstract,omitempty" json:"abstract,omitempty" yaml:"abstract,omitempty" xml:"abstract,omitempty"`
+	Authors            *string `form:"authors,omitempty" json:"authors,omitempty" yaml:"authors,omitempty" xml:"authors,omitempty"`
+	CitedAmount        *int    `form:"cited_amount,omitempty" json:"cited_amount,omitempty" yaml:"cited_amount,omitempty" xml:"cited_amount,omitempty"`
+	CitedBy            *string `form:"cited_by,omitempty" json:"cited_by,omitempty" yaml:"cited_by,omitempty" xml:"cited_by,omitempty"`
+	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
+	Doi                *string `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
+	GotPdf             *bool   `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
+	Journal            *string `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`
+	Language           *string `form:"language,omitempty" json:"language,omitempty" yaml:"language,omitempty" xml:"language,omitempty"`
+	Platform           *int    `form:"platform,omitempty" json:"platform,omitempty" yaml:"platform,omitempty" xml:"platform,omitempty"`
+	Publisher          *string `form:"publisher,omitempty" json:"publisher,omitempty" yaml:"publisher,omitempty" xml:"publisher,omitempty"`
+	Query              *string `form:"query,omitempty" json:"query,omitempty" yaml:"query,omitempty" xml:"query,omitempty"`
+	QueryPlatform      *string `form:"query_platform,omitempty" json:"query_platform,omitempty" yaml:"query_platform,omitempty" xml:"query_platform,omitempty"`
+	SearchResultNumber *int    `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
+	Status             *int    `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
+	Title              *string `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
+	Type               *string `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
+	URL                *string `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
+	Year               *int    `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
+}
+
+// Publicize creates CreateArticlePayload from createArticlePayload
+func (payload *createArticlePayload) Publicize() *CreateArticlePayload {
+	var pub CreateArticlePayload
+	if payload.Abstract != nil {
+		pub.Abstract = payload.Abstract
+	}
+	if payload.Authors != nil {
+		pub.Authors = payload.Authors
+	}
+	if payload.CitedAmount != nil {
+		pub.CitedAmount = payload.CitedAmount
+	}
+	if payload.CitedBy != nil {
+		pub.CitedBy = payload.CitedBy
+	}
+	if payload.Comment != nil {
+		pub.Comment = payload.Comment
+	}
+	if payload.Doi != nil {
+		pub.Doi = payload.Doi
+	}
+	if payload.GotPdf != nil {
+		pub.GotPdf = payload.GotPdf
+	}
+	if payload.Journal != nil {
+		pub.Journal = payload.Journal
+	}
+	if payload.Language != nil {
+		pub.Language = payload.Language
+	}
+	if payload.Platform != nil {
+		pub.Platform = payload.Platform
+	}
+	if payload.Publisher != nil {
+		pub.Publisher = payload.Publisher
+	}
+	if payload.Query != nil {
+		pub.Query = payload.Query
+	}
+	if payload.QueryPlatform != nil {
+		pub.QueryPlatform = payload.QueryPlatform
+	}
+	if payload.SearchResultNumber != nil {
+		pub.SearchResultNumber = payload.SearchResultNumber
+	}
+	if payload.Status != nil {
+		pub.Status = payload.Status
+	}
+	if payload.Title != nil {
+		pub.Title = payload.Title
+	}
+	if payload.Type != nil {
+		pub.Type = payload.Type
+	}
+	if payload.URL != nil {
+		pub.URL = payload.URL
+	}
+	if payload.Year != nil {
+		pub.Year = payload.Year
+	}
+	return &pub
+}
+
+// CreateArticlePayload is the article create action payload.
+type CreateArticlePayload struct {
+	Abstract           *string `form:"abstract,omitempty" json:"abstract,omitempty" yaml:"abstract,omitempty" xml:"abstract,omitempty"`
+	Authors            *string `form:"authors,omitempty" json:"authors,omitempty" yaml:"authors,omitempty" xml:"authors,omitempty"`
+	CitedAmount        *int    `form:"cited_amount,omitempty" json:"cited_amount,omitempty" yaml:"cited_amount,omitempty" xml:"cited_amount,omitempty"`
+	CitedBy            *string `form:"cited_by,omitempty" json:"cited_by,omitempty" yaml:"cited_by,omitempty" xml:"cited_by,omitempty"`
+	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
+	Doi                *string `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
+	GotPdf             *bool   `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
+	Journal            *string `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`
+	Language           *string `form:"language,omitempty" json:"language,omitempty" yaml:"language,omitempty" xml:"language,omitempty"`
+	Platform           *int    `form:"platform,omitempty" json:"platform,omitempty" yaml:"platform,omitempty" xml:"platform,omitempty"`
+	Publisher          *string `form:"publisher,omitempty" json:"publisher,omitempty" yaml:"publisher,omitempty" xml:"publisher,omitempty"`
+	Query              *string `form:"query,omitempty" json:"query,omitempty" yaml:"query,omitempty" xml:"query,omitempty"`
+	QueryPlatform      *string `form:"query_platform,omitempty" json:"query_platform,omitempty" yaml:"query_platform,omitempty" xml:"query_platform,omitempty"`
+	SearchResultNumber *int    `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
+	Status             *int    `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
+	Title              *string `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
+	Type               *string `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
+	URL                *string `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
+	Year               *int    `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *CreateArticleContext) OK(r *Article) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.article+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *CreateArticleContext) BadRequest(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// NotFound sends a HTTP response with status code 404.
+func (ctx *CreateArticleContext) NotFound() error {
+	ctx.ResponseData.WriteHeader(404)
+	return nil
+}
+
+// InternalServerError sends a HTTP response with status code 500.
+func (ctx *CreateArticleContext) InternalServerError() error {
+	ctx.ResponseData.WriteHeader(500)
+	return nil
+}
+
+// DeleteArticleContext provides the article delete action context.
+type DeleteArticleContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	ArticleID uuid.UUID
+	ProjectID uuid.UUID
+}
+
+// NewDeleteArticleContext parses the incoming request URL and body, performs validations and creates the
+// context used by the article controller delete action.
+func NewDeleteArticleContext(ctx context.Context, r *http.Request, service *goa.Service) (*DeleteArticleContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := DeleteArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramArticleID := req.Params["articleID"]
+	if len(paramArticleID) > 0 {
+		rawArticleID := paramArticleID[0]
+		if articleID, err2 := uuid.FromString(rawArticleID); err2 == nil {
+			rctx.ArticleID = articleID
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("articleID", rawArticleID, "uuid"))
+		}
+	}
+	paramProjectID := req.Params["projectID"]
+	if len(paramProjectID) > 0 {
+		rawProjectID := paramProjectID[0]
+		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
+			rctx.ProjectID = projectID
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
+		}
+	}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *DeleteArticleContext) OK(r *Article) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.article+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *DeleteArticleContext) BadRequest(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// DownloadArticleContext provides the article download action context.
+type DownloadArticleContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	ProjectID uuid.UUID
+}
+
+// NewDownloadArticleContext parses the incoming request URL and body, performs validations and creates the
+// context used by the article controller download action.
+func NewDownloadArticleContext(ctx context.Context, r *http.Request, service *goa.Service) (*DownloadArticleContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := DownloadArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramProjectID := req.Params["projectID"]
+	if len(paramProjectID) > 0 {
+		rawProjectID := paramProjectID[0]
+		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
+			rctx.ProjectID = projectID
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
+		}
+	}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *DownloadArticleContext) OK(r *Article) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.article+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *DownloadArticleContext) BadRequest(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// NotFound sends a HTTP response with status code 404.
+func (ctx *DownloadArticleContext) NotFound() error {
+	ctx.ResponseData.WriteHeader(404)
+	return nil
+}
+
+// InternalServerError sends a HTTP response with status code 500.
+func (ctx *DownloadArticleContext) InternalServerError() error {
+	ctx.ResponseData.WriteHeader(500)
+	return nil
+}
+
+// ListArticleContext provides the article list action context.
+type ListArticleContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	Abstract    *string
+	AmountCited *int
+	Doi         *string
+	ProjectID   uuid.UUID
+	Status      *int
+	Title       *string
+	Type        *string
+	Year        *int
+}
+
+// NewListArticleContext parses the incoming request URL and body, performs validations and creates the
+// context used by the article controller list action.
+func NewListArticleContext(ctx context.Context, r *http.Request, service *goa.Service) (*ListArticleContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := ListArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramAbstract := req.Params["abstract"]
+	if len(paramAbstract) > 0 {
+		rawAbstract := paramAbstract[0]
+		rctx.Abstract = &rawAbstract
+	}
+	paramAmountCited := req.Params["amount_cited"]
+	if len(paramAmountCited) > 0 {
+		rawAmountCited := paramAmountCited[0]
+		if amountCited, err2 := strconv.Atoi(rawAmountCited); err2 == nil {
+			tmp6 := amountCited
+			tmp5 := &tmp6
+			rctx.AmountCited = tmp5
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("amount_cited", rawAmountCited, "integer"))
+		}
+	}
+	paramDoi := req.Params["doi"]
+	if len(paramDoi) > 0 {
+		rawDoi := paramDoi[0]
+		rctx.Doi = &rawDoi
+	}
+	paramProjectID := req.Params["projectID"]
+	if len(paramProjectID) > 0 {
+		rawProjectID := paramProjectID[0]
+		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
+			rctx.ProjectID = projectID
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
+		}
+	}
+	paramStatus := req.Params["status"]
+	if len(paramStatus) > 0 {
+		rawStatus := paramStatus[0]
+		if status, err2 := strconv.Atoi(rawStatus); err2 == nil {
+			tmp9 := status
+			tmp8 := &tmp9
+			rctx.Status = tmp8
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("status", rawStatus, "integer"))
+		}
+	}
+	paramTitle := req.Params["title"]
+	if len(paramTitle) > 0 {
+		rawTitle := paramTitle[0]
+		rctx.Title = &rawTitle
+	}
+	paramType := req.Params["type"]
+	if len(paramType) > 0 {
+		rawType := paramType[0]
+		rctx.Type = &rawType
+	}
+	paramYear := req.Params["year"]
+	if len(paramYear) > 0 {
+		rawYear := paramYear[0]
+		if year, err2 := strconv.Atoi(rawYear); err2 == nil {
+			tmp11 := year
+			tmp10 := &tmp11
+			rctx.Year = tmp10
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("year", rawYear, "integer"))
+		}
+	}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *ListArticleContext) OK(r ArticleCollection) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.article+json; type=collection")
+	}
+	if r == nil {
+		r = ArticleCollection{}
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *ListArticleContext) BadRequest(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// SnowballArticleContext provides the article snowball action context.
+type SnowballArticleContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	ProjectID uuid.UUID
+}
+
+// NewSnowballArticleContext parses the incoming request URL and body, performs validations and creates the
+// context used by the article controller snowball action.
+func NewSnowballArticleContext(ctx context.Context, r *http.Request, service *goa.Service) (*SnowballArticleContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := SnowballArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramProjectID := req.Params["projectID"]
+	if len(paramProjectID) > 0 {
+		rawProjectID := paramProjectID[0]
+		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
+			rctx.ProjectID = projectID
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
+		}
+	}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *SnowballArticleContext) OK(r *Article) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.article+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *SnowballArticleContext) BadRequest(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// UpdateArticleContext provides the article update action context.
+type UpdateArticleContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	ArticleID uuid.UUID
+	ProjectID uuid.UUID
+	Payload   *UpdateArticlePayload
+}
+
+// NewUpdateArticleContext parses the incoming request URL and body, performs validations and creates the
+// context used by the article controller update action.
+func NewUpdateArticleContext(ctx context.Context, r *http.Request, service *goa.Service) (*UpdateArticleContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := UpdateArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramArticleID := req.Params["articleID"]
+	if len(paramArticleID) > 0 {
+		rawArticleID := paramArticleID[0]
+		if articleID, err2 := uuid.FromString(rawArticleID); err2 == nil {
+			rctx.ArticleID = articleID
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("articleID", rawArticleID, "uuid"))
+		}
+	}
+	paramProjectID := req.Params["projectID"]
+	if len(paramProjectID) > 0 {
+		rawProjectID := paramProjectID[0]
+		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
+			rctx.ProjectID = projectID
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
+		}
+	}
+	return &rctx, err
+}
+
+// updateArticlePayload is the article update action payload.
+type updateArticlePayload struct {
+	Abstract           *string `form:"abstract,omitempty" json:"abstract,omitempty" yaml:"abstract,omitempty" xml:"abstract,omitempty"`
+	Authors            *string `form:"authors,omitempty" json:"authors,omitempty" yaml:"authors,omitempty" xml:"authors,omitempty"`
+	CitedAmount        *int    `form:"cited_amount,omitempty" json:"cited_amount,omitempty" yaml:"cited_amount,omitempty" xml:"cited_amount,omitempty"`
+	CitedBy            *string `form:"cited_by,omitempty" json:"cited_by,omitempty" yaml:"cited_by,omitempty" xml:"cited_by,omitempty"`
+	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
+	Doi                *string `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
+	GotPdf             *bool   `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
+	Journal            *string `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`
+	Language           *string `form:"language,omitempty" json:"language,omitempty" yaml:"language,omitempty" xml:"language,omitempty"`
+	Platform           *int    `form:"platform,omitempty" json:"platform,omitempty" yaml:"platform,omitempty" xml:"platform,omitempty"`
+	Publisher          *string `form:"publisher,omitempty" json:"publisher,omitempty" yaml:"publisher,omitempty" xml:"publisher,omitempty"`
+	Query              *string `form:"query,omitempty" json:"query,omitempty" yaml:"query,omitempty" xml:"query,omitempty"`
+	QueryPlatform      *string `form:"query_platform,omitempty" json:"query_platform,omitempty" yaml:"query_platform,omitempty" xml:"query_platform,omitempty"`
+	SearchResultNumber *int    `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
+	Status             *int    `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
+	Title              *string `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
+	Type               *string `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
+	URL                *string `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
+	Year               *int    `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
+}
+
+// Publicize creates UpdateArticlePayload from updateArticlePayload
+func (payload *updateArticlePayload) Publicize() *UpdateArticlePayload {
+	var pub UpdateArticlePayload
+	if payload.Abstract != nil {
+		pub.Abstract = payload.Abstract
+	}
+	if payload.Authors != nil {
+		pub.Authors = payload.Authors
+	}
+	if payload.CitedAmount != nil {
+		pub.CitedAmount = payload.CitedAmount
+	}
+	if payload.CitedBy != nil {
+		pub.CitedBy = payload.CitedBy
+	}
+	if payload.Comment != nil {
+		pub.Comment = payload.Comment
+	}
+	if payload.Doi != nil {
+		pub.Doi = payload.Doi
+	}
+	if payload.GotPdf != nil {
+		pub.GotPdf = payload.GotPdf
+	}
+	if payload.Journal != nil {
+		pub.Journal = payload.Journal
+	}
+	if payload.Language != nil {
+		pub.Language = payload.Language
+	}
+	if payload.Platform != nil {
+		pub.Platform = payload.Platform
+	}
+	if payload.Publisher != nil {
+		pub.Publisher = payload.Publisher
+	}
+	if payload.Query != nil {
+		pub.Query = payload.Query
+	}
+	if payload.QueryPlatform != nil {
+		pub.QueryPlatform = payload.QueryPlatform
+	}
+	if payload.SearchResultNumber != nil {
+		pub.SearchResultNumber = payload.SearchResultNumber
+	}
+	if payload.Status != nil {
+		pub.Status = payload.Status
+	}
+	if payload.Title != nil {
+		pub.Title = payload.Title
+	}
+	if payload.Type != nil {
+		pub.Type = payload.Type
+	}
+	if payload.URL != nil {
+		pub.URL = payload.URL
+	}
+	if payload.Year != nil {
+		pub.Year = payload.Year
+	}
+	return &pub
+}
+
+// UpdateArticlePayload is the article update action payload.
+type UpdateArticlePayload struct {
+	Abstract           *string `form:"abstract,omitempty" json:"abstract,omitempty" yaml:"abstract,omitempty" xml:"abstract,omitempty"`
+	Authors            *string `form:"authors,omitempty" json:"authors,omitempty" yaml:"authors,omitempty" xml:"authors,omitempty"`
+	CitedAmount        *int    `form:"cited_amount,omitempty" json:"cited_amount,omitempty" yaml:"cited_amount,omitempty" xml:"cited_amount,omitempty"`
+	CitedBy            *string `form:"cited_by,omitempty" json:"cited_by,omitempty" yaml:"cited_by,omitempty" xml:"cited_by,omitempty"`
+	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
+	Doi                *string `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
+	GotPdf             *bool   `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
+	Journal            *string `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`
+	Language           *string `form:"language,omitempty" json:"language,omitempty" yaml:"language,omitempty" xml:"language,omitempty"`
+	Platform           *int    `form:"platform,omitempty" json:"platform,omitempty" yaml:"platform,omitempty" xml:"platform,omitempty"`
+	Publisher          *string `form:"publisher,omitempty" json:"publisher,omitempty" yaml:"publisher,omitempty" xml:"publisher,omitempty"`
+	Query              *string `form:"query,omitempty" json:"query,omitempty" yaml:"query,omitempty" xml:"query,omitempty"`
+	QueryPlatform      *string `form:"query_platform,omitempty" json:"query_platform,omitempty" yaml:"query_platform,omitempty" xml:"query_platform,omitempty"`
+	SearchResultNumber *int    `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
+	Status             *int    `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
+	Title              *string `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
+	Type               *string `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
+	URL                *string `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
+	Year               *int    `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *UpdateArticleContext) OK(r *Article) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.article+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *UpdateArticleContext) BadRequest(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// NotFound sends a HTTP response with status code 404.
+func (ctx *UpdateArticleContext) NotFound() error {
+	ctx.ResponseData.WriteHeader(404)
+	return nil
+}
+
+// InternalServerError sends a HTTP response with status code 500.
+func (ctx *UpdateArticleContext) InternalServerError() error {
+	ctx.ResponseData.WriteHeader(500)
+	return nil
+}
+
+// HealthHealthContext provides the health health action context.
+type HealthHealthContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+}
+
+// NewHealthHealthContext parses the incoming request URL and body, performs validations and creates the
+// context used by the health controller health action.
+func NewHealthHealthContext(ctx context.Context, r *http.Request, service *goa.Service) (*HealthHealthContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := HealthHealthContext{Context: ctx, ResponseData: resp, RequestData: req}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *HealthHealthContext) OK(r *Health) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.health+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *HealthHealthContext) BadRequest(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// RefreshJWTContext provides the jwt refresh action context.
+type RefreshJWTContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+}
+
+// NewRefreshJWTContext parses the incoming request URL and body, performs validations and creates the
+// context used by the jwt controller refresh action.
+func NewRefreshJWTContext(ctx context.Context, r *http.Request, service *goa.Service) (*RefreshJWTContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := RefreshJWTContext{Context: ctx, ResponseData: resp, RequestData: req}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *RefreshJWTContext) OK(resp []byte) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "text/plain")
+	}
+	ctx.ResponseData.WriteHeader(200)
+	_, err := ctx.ResponseData.Write(resp)
+	return err
+}
+
+// SigninJWTContext provides the jwt signin action context.
+type SigninJWTContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+}
+
+// NewSigninJWTContext parses the incoming request URL and body, performs validations and creates the
+// context used by the jwt controller signin action.
+func NewSigninJWTContext(ctx context.Context, r *http.Request, service *goa.Service) (*SigninJWTContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := SigninJWTContext{Context: ctx, ResponseData: resp, RequestData: req}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *SigninJWTContext) OK(resp []byte) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "text/plain")
+	}
+	ctx.ResponseData.WriteHeader(200)
+	_, err := ctx.ResponseData.Write(resp)
+	return err
+}
+
+// Unauthorized sends a HTTP response with status code 401.
+func (ctx *SigninJWTContext) Unauthorized() error {
+	ctx.ResponseData.WriteHeader(401)
+	return nil
+}
+
 // CreateProjectContext provides the project create action context.
 type CreateProjectContext struct {
 	context.Context
@@ -498,714 +1206,6 @@ func (ctx *UpdateProjectContext) NotFound() error {
 // InternalServerError sends a HTTP response with status code 500.
 func (ctx *UpdateProjectContext) InternalServerError() error {
 	ctx.ResponseData.WriteHeader(500)
-	return nil
-}
-
-// CreateArticleContext provides the article create action context.
-type CreateArticleContext struct {
-	context.Context
-	*goa.ResponseData
-	*goa.RequestData
-	ProjectID uuid.UUID
-	Payload   *CreateArticlePayload
-}
-
-// NewCreateArticleContext parses the incoming request URL and body, performs validations and creates the
-// context used by the article controller create action.
-func NewCreateArticleContext(ctx context.Context, r *http.Request, service *goa.Service) (*CreateArticleContext, error) {
-	var err error
-	resp := goa.ContextResponse(ctx)
-	resp.Service = service
-	req := goa.ContextRequest(ctx)
-	req.Request = r
-	rctx := CreateArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
-	paramProjectID := req.Params["projectID"]
-	if len(paramProjectID) > 0 {
-		rawProjectID := paramProjectID[0]
-		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
-			rctx.ProjectID = projectID
-		} else {
-			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
-		}
-	}
-	return &rctx, err
-}
-
-// createArticlePayload is the article create action payload.
-type createArticlePayload struct {
-	Abstract           *string `form:"abstract,omitempty" json:"abstract,omitempty" yaml:"abstract,omitempty" xml:"abstract,omitempty"`
-	Authors            *string `form:"authors,omitempty" json:"authors,omitempty" yaml:"authors,omitempty" xml:"authors,omitempty"`
-	CitedAmount        *int    `form:"cited_amount,omitempty" json:"cited_amount,omitempty" yaml:"cited_amount,omitempty" xml:"cited_amount,omitempty"`
-	CitedBy            *string `form:"cited_by,omitempty" json:"cited_by,omitempty" yaml:"cited_by,omitempty" xml:"cited_by,omitempty"`
-	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
-	Doi                *string `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
-	GotPdf             *bool   `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
-	Journal            *string `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`
-	Language           *string `form:"language,omitempty" json:"language,omitempty" yaml:"language,omitempty" xml:"language,omitempty"`
-	Platform           *int    `form:"platform,omitempty" json:"platform,omitempty" yaml:"platform,omitempty" xml:"platform,omitempty"`
-	Publisher          *string `form:"publisher,omitempty" json:"publisher,omitempty" yaml:"publisher,omitempty" xml:"publisher,omitempty"`
-	Query              *string `form:"query,omitempty" json:"query,omitempty" yaml:"query,omitempty" xml:"query,omitempty"`
-	QueryPlatform      *string `form:"query_platform,omitempty" json:"query_platform,omitempty" yaml:"query_platform,omitempty" xml:"query_platform,omitempty"`
-	SearchResultNumber *int    `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
-	Status             *int    `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
-	Title              *string `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
-	Type               *string `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
-	URL                *string `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
-	Year               *int    `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
-}
-
-// Publicize creates CreateArticlePayload from createArticlePayload
-func (payload *createArticlePayload) Publicize() *CreateArticlePayload {
-	var pub CreateArticlePayload
-	if payload.Abstract != nil {
-		pub.Abstract = payload.Abstract
-	}
-	if payload.Authors != nil {
-		pub.Authors = payload.Authors
-	}
-	if payload.CitedAmount != nil {
-		pub.CitedAmount = payload.CitedAmount
-	}
-	if payload.CitedBy != nil {
-		pub.CitedBy = payload.CitedBy
-	}
-	if payload.Comment != nil {
-		pub.Comment = payload.Comment
-	}
-	if payload.Doi != nil {
-		pub.Doi = payload.Doi
-	}
-	if payload.GotPdf != nil {
-		pub.GotPdf = payload.GotPdf
-	}
-	if payload.Journal != nil {
-		pub.Journal = payload.Journal
-	}
-	if payload.Language != nil {
-		pub.Language = payload.Language
-	}
-	if payload.Platform != nil {
-		pub.Platform = payload.Platform
-	}
-	if payload.Publisher != nil {
-		pub.Publisher = payload.Publisher
-	}
-	if payload.Query != nil {
-		pub.Query = payload.Query
-	}
-	if payload.QueryPlatform != nil {
-		pub.QueryPlatform = payload.QueryPlatform
-	}
-	if payload.SearchResultNumber != nil {
-		pub.SearchResultNumber = payload.SearchResultNumber
-	}
-	if payload.Status != nil {
-		pub.Status = payload.Status
-	}
-	if payload.Title != nil {
-		pub.Title = payload.Title
-	}
-	if payload.Type != nil {
-		pub.Type = payload.Type
-	}
-	if payload.URL != nil {
-		pub.URL = payload.URL
-	}
-	if payload.Year != nil {
-		pub.Year = payload.Year
-	}
-	return &pub
-}
-
-// CreateArticlePayload is the article create action payload.
-type CreateArticlePayload struct {
-	Abstract           *string `form:"abstract,omitempty" json:"abstract,omitempty" yaml:"abstract,omitempty" xml:"abstract,omitempty"`
-	Authors            *string `form:"authors,omitempty" json:"authors,omitempty" yaml:"authors,omitempty" xml:"authors,omitempty"`
-	CitedAmount        *int    `form:"cited_amount,omitempty" json:"cited_amount,omitempty" yaml:"cited_amount,omitempty" xml:"cited_amount,omitempty"`
-	CitedBy            *string `form:"cited_by,omitempty" json:"cited_by,omitempty" yaml:"cited_by,omitempty" xml:"cited_by,omitempty"`
-	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
-	Doi                *string `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
-	GotPdf             *bool   `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
-	Journal            *string `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`
-	Language           *string `form:"language,omitempty" json:"language,omitempty" yaml:"language,omitempty" xml:"language,omitempty"`
-	Platform           *int    `form:"platform,omitempty" json:"platform,omitempty" yaml:"platform,omitempty" xml:"platform,omitempty"`
-	Publisher          *string `form:"publisher,omitempty" json:"publisher,omitempty" yaml:"publisher,omitempty" xml:"publisher,omitempty"`
-	Query              *string `form:"query,omitempty" json:"query,omitempty" yaml:"query,omitempty" xml:"query,omitempty"`
-	QueryPlatform      *string `form:"query_platform,omitempty" json:"query_platform,omitempty" yaml:"query_platform,omitempty" xml:"query_platform,omitempty"`
-	SearchResultNumber *int    `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
-	Status             *int    `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
-	Title              *string `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
-	Type               *string `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
-	URL                *string `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
-	Year               *int    `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
-}
-
-// OK sends a HTTP response with status code 200.
-func (ctx *CreateArticleContext) OK(r *Article) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.article+json")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
-}
-
-// BadRequest sends a HTTP response with status code 400.
-func (ctx *CreateArticleContext) BadRequest(r error) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
-}
-
-// NotFound sends a HTTP response with status code 404.
-func (ctx *CreateArticleContext) NotFound() error {
-	ctx.ResponseData.WriteHeader(404)
-	return nil
-}
-
-// InternalServerError sends a HTTP response with status code 500.
-func (ctx *CreateArticleContext) InternalServerError() error {
-	ctx.ResponseData.WriteHeader(500)
-	return nil
-}
-
-// DeleteArticleContext provides the article delete action context.
-type DeleteArticleContext struct {
-	context.Context
-	*goa.ResponseData
-	*goa.RequestData
-	ArticleID uuid.UUID
-	ProjectID uuid.UUID
-}
-
-// NewDeleteArticleContext parses the incoming request URL and body, performs validations and creates the
-// context used by the article controller delete action.
-func NewDeleteArticleContext(ctx context.Context, r *http.Request, service *goa.Service) (*DeleteArticleContext, error) {
-	var err error
-	resp := goa.ContextResponse(ctx)
-	resp.Service = service
-	req := goa.ContextRequest(ctx)
-	req.Request = r
-	rctx := DeleteArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
-	paramArticleID := req.Params["articleID"]
-	if len(paramArticleID) > 0 {
-		rawArticleID := paramArticleID[0]
-		if articleID, err2 := uuid.FromString(rawArticleID); err2 == nil {
-			rctx.ArticleID = articleID
-		} else {
-			err = goa.MergeErrors(err, goa.InvalidParamTypeError("articleID", rawArticleID, "uuid"))
-		}
-	}
-	paramProjectID := req.Params["projectID"]
-	if len(paramProjectID) > 0 {
-		rawProjectID := paramProjectID[0]
-		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
-			rctx.ProjectID = projectID
-		} else {
-			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
-		}
-	}
-	return &rctx, err
-}
-
-// OK sends a HTTP response with status code 200.
-func (ctx *DeleteArticleContext) OK(r *Article) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.article+json")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
-}
-
-// BadRequest sends a HTTP response with status code 400.
-func (ctx *DeleteArticleContext) BadRequest(r error) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
-}
-
-// DownloadArticleContext provides the article download action context.
-type DownloadArticleContext struct {
-	context.Context
-	*goa.ResponseData
-	*goa.RequestData
-	ProjectID uuid.UUID
-}
-
-// NewDownloadArticleContext parses the incoming request URL and body, performs validations and creates the
-// context used by the article controller download action.
-func NewDownloadArticleContext(ctx context.Context, r *http.Request, service *goa.Service) (*DownloadArticleContext, error) {
-	var err error
-	resp := goa.ContextResponse(ctx)
-	resp.Service = service
-	req := goa.ContextRequest(ctx)
-	req.Request = r
-	rctx := DownloadArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
-	paramProjectID := req.Params["projectID"]
-	if len(paramProjectID) > 0 {
-		rawProjectID := paramProjectID[0]
-		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
-			rctx.ProjectID = projectID
-		} else {
-			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
-		}
-	}
-	return &rctx, err
-}
-
-// OK sends a HTTP response with status code 200.
-func (ctx *DownloadArticleContext) OK(r *Article) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.article+json")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
-}
-
-// BadRequest sends a HTTP response with status code 400.
-func (ctx *DownloadArticleContext) BadRequest(r error) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
-}
-
-// NotFound sends a HTTP response with status code 404.
-func (ctx *DownloadArticleContext) NotFound() error {
-	ctx.ResponseData.WriteHeader(404)
-	return nil
-}
-
-// InternalServerError sends a HTTP response with status code 500.
-func (ctx *DownloadArticleContext) InternalServerError() error {
-	ctx.ResponseData.WriteHeader(500)
-	return nil
-}
-
-// ListArticleContext provides the article list action context.
-type ListArticleContext struct {
-	context.Context
-	*goa.ResponseData
-	*goa.RequestData
-	Abstract    *string
-	AmountCited *int
-	Doi         *string
-	ProjectID   uuid.UUID
-	Status      *int
-	Title       *string
-	Type        *string
-	Year        *int
-}
-
-// NewListArticleContext parses the incoming request URL and body, performs validations and creates the
-// context used by the article controller list action.
-func NewListArticleContext(ctx context.Context, r *http.Request, service *goa.Service) (*ListArticleContext, error) {
-	var err error
-	resp := goa.ContextResponse(ctx)
-	resp.Service = service
-	req := goa.ContextRequest(ctx)
-	req.Request = r
-	rctx := ListArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
-	paramAbstract := req.Params["abstract"]
-	if len(paramAbstract) > 0 {
-		rawAbstract := paramAbstract[0]
-		rctx.Abstract = &rawAbstract
-	}
-	paramAmountCited := req.Params["amount_cited"]
-	if len(paramAmountCited) > 0 {
-		rawAmountCited := paramAmountCited[0]
-		if amountCited, err2 := strconv.Atoi(rawAmountCited); err2 == nil {
-			tmp10 := amountCited
-			tmp9 := &tmp10
-			rctx.AmountCited = tmp9
-		} else {
-			err = goa.MergeErrors(err, goa.InvalidParamTypeError("amount_cited", rawAmountCited, "integer"))
-		}
-	}
-	paramDoi := req.Params["doi"]
-	if len(paramDoi) > 0 {
-		rawDoi := paramDoi[0]
-		rctx.Doi = &rawDoi
-	}
-	paramProjectID := req.Params["projectID"]
-	if len(paramProjectID) > 0 {
-		rawProjectID := paramProjectID[0]
-		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
-			rctx.ProjectID = projectID
-		} else {
-			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
-		}
-	}
-	paramStatus := req.Params["status"]
-	if len(paramStatus) > 0 {
-		rawStatus := paramStatus[0]
-		if status, err2 := strconv.Atoi(rawStatus); err2 == nil {
-			tmp13 := status
-			tmp12 := &tmp13
-			rctx.Status = tmp12
-		} else {
-			err = goa.MergeErrors(err, goa.InvalidParamTypeError("status", rawStatus, "integer"))
-		}
-	}
-	paramTitle := req.Params["title"]
-	if len(paramTitle) > 0 {
-		rawTitle := paramTitle[0]
-		rctx.Title = &rawTitle
-	}
-	paramType := req.Params["type"]
-	if len(paramType) > 0 {
-		rawType := paramType[0]
-		rctx.Type = &rawType
-	}
-	paramYear := req.Params["year"]
-	if len(paramYear) > 0 {
-		rawYear := paramYear[0]
-		if year, err2 := strconv.Atoi(rawYear); err2 == nil {
-			tmp15 := year
-			tmp14 := &tmp15
-			rctx.Year = tmp14
-		} else {
-			err = goa.MergeErrors(err, goa.InvalidParamTypeError("year", rawYear, "integer"))
-		}
-	}
-	return &rctx, err
-}
-
-// OK sends a HTTP response with status code 200.
-func (ctx *ListArticleContext) OK(r ArticleCollection) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.article+json; type=collection")
-	}
-	if r == nil {
-		r = ArticleCollection{}
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
-}
-
-// BadRequest sends a HTTP response with status code 400.
-func (ctx *ListArticleContext) BadRequest(r error) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
-}
-
-// SnowballArticleContext provides the article snowball action context.
-type SnowballArticleContext struct {
-	context.Context
-	*goa.ResponseData
-	*goa.RequestData
-	ProjectID uuid.UUID
-}
-
-// NewSnowballArticleContext parses the incoming request URL and body, performs validations and creates the
-// context used by the article controller snowball action.
-func NewSnowballArticleContext(ctx context.Context, r *http.Request, service *goa.Service) (*SnowballArticleContext, error) {
-	var err error
-	resp := goa.ContextResponse(ctx)
-	resp.Service = service
-	req := goa.ContextRequest(ctx)
-	req.Request = r
-	rctx := SnowballArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
-	paramProjectID := req.Params["projectID"]
-	if len(paramProjectID) > 0 {
-		rawProjectID := paramProjectID[0]
-		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
-			rctx.ProjectID = projectID
-		} else {
-			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
-		}
-	}
-	return &rctx, err
-}
-
-// OK sends a HTTP response with status code 200.
-func (ctx *SnowballArticleContext) OK(r *Article) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.article+json")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
-}
-
-// BadRequest sends a HTTP response with status code 400.
-func (ctx *SnowballArticleContext) BadRequest(r error) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
-}
-
-// UpdateArticleContext provides the article update action context.
-type UpdateArticleContext struct {
-	context.Context
-	*goa.ResponseData
-	*goa.RequestData
-	ArticleID uuid.UUID
-	ProjectID uuid.UUID
-	Payload   *UpdateArticlePayload
-}
-
-// NewUpdateArticleContext parses the incoming request URL and body, performs validations and creates the
-// context used by the article controller update action.
-func NewUpdateArticleContext(ctx context.Context, r *http.Request, service *goa.Service) (*UpdateArticleContext, error) {
-	var err error
-	resp := goa.ContextResponse(ctx)
-	resp.Service = service
-	req := goa.ContextRequest(ctx)
-	req.Request = r
-	rctx := UpdateArticleContext{Context: ctx, ResponseData: resp, RequestData: req}
-	paramArticleID := req.Params["articleID"]
-	if len(paramArticleID) > 0 {
-		rawArticleID := paramArticleID[0]
-		if articleID, err2 := uuid.FromString(rawArticleID); err2 == nil {
-			rctx.ArticleID = articleID
-		} else {
-			err = goa.MergeErrors(err, goa.InvalidParamTypeError("articleID", rawArticleID, "uuid"))
-		}
-	}
-	paramProjectID := req.Params["projectID"]
-	if len(paramProjectID) > 0 {
-		rawProjectID := paramProjectID[0]
-		if projectID, err2 := uuid.FromString(rawProjectID); err2 == nil {
-			rctx.ProjectID = projectID
-		} else {
-			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
-		}
-	}
-	return &rctx, err
-}
-
-// updateArticlePayload is the article update action payload.
-type updateArticlePayload struct {
-	Abstract           *string `form:"abstract,omitempty" json:"abstract,omitempty" yaml:"abstract,omitempty" xml:"abstract,omitempty"`
-	Authors            *string `form:"authors,omitempty" json:"authors,omitempty" yaml:"authors,omitempty" xml:"authors,omitempty"`
-	CitedAmount        *int    `form:"cited_amount,omitempty" json:"cited_amount,omitempty" yaml:"cited_amount,omitempty" xml:"cited_amount,omitempty"`
-	CitedBy            *string `form:"cited_by,omitempty" json:"cited_by,omitempty" yaml:"cited_by,omitempty" xml:"cited_by,omitempty"`
-	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
-	Doi                *string `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
-	GotPdf             *bool   `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
-	Journal            *string `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`
-	Language           *string `form:"language,omitempty" json:"language,omitempty" yaml:"language,omitempty" xml:"language,omitempty"`
-	Platform           *int    `form:"platform,omitempty" json:"platform,omitempty" yaml:"platform,omitempty" xml:"platform,omitempty"`
-	Publisher          *string `form:"publisher,omitempty" json:"publisher,omitempty" yaml:"publisher,omitempty" xml:"publisher,omitempty"`
-	Query              *string `form:"query,omitempty" json:"query,omitempty" yaml:"query,omitempty" xml:"query,omitempty"`
-	QueryPlatform      *string `form:"query_platform,omitempty" json:"query_platform,omitempty" yaml:"query_platform,omitempty" xml:"query_platform,omitempty"`
-	SearchResultNumber *int    `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
-	Status             *int    `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
-	Title              *string `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
-	Type               *string `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
-	URL                *string `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
-	Year               *int    `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
-}
-
-// Publicize creates UpdateArticlePayload from updateArticlePayload
-func (payload *updateArticlePayload) Publicize() *UpdateArticlePayload {
-	var pub UpdateArticlePayload
-	if payload.Abstract != nil {
-		pub.Abstract = payload.Abstract
-	}
-	if payload.Authors != nil {
-		pub.Authors = payload.Authors
-	}
-	if payload.CitedAmount != nil {
-		pub.CitedAmount = payload.CitedAmount
-	}
-	if payload.CitedBy != nil {
-		pub.CitedBy = payload.CitedBy
-	}
-	if payload.Comment != nil {
-		pub.Comment = payload.Comment
-	}
-	if payload.Doi != nil {
-		pub.Doi = payload.Doi
-	}
-	if payload.GotPdf != nil {
-		pub.GotPdf = payload.GotPdf
-	}
-	if payload.Journal != nil {
-		pub.Journal = payload.Journal
-	}
-	if payload.Language != nil {
-		pub.Language = payload.Language
-	}
-	if payload.Platform != nil {
-		pub.Platform = payload.Platform
-	}
-	if payload.Publisher != nil {
-		pub.Publisher = payload.Publisher
-	}
-	if payload.Query != nil {
-		pub.Query = payload.Query
-	}
-	if payload.QueryPlatform != nil {
-		pub.QueryPlatform = payload.QueryPlatform
-	}
-	if payload.SearchResultNumber != nil {
-		pub.SearchResultNumber = payload.SearchResultNumber
-	}
-	if payload.Status != nil {
-		pub.Status = payload.Status
-	}
-	if payload.Title != nil {
-		pub.Title = payload.Title
-	}
-	if payload.Type != nil {
-		pub.Type = payload.Type
-	}
-	if payload.URL != nil {
-		pub.URL = payload.URL
-	}
-	if payload.Year != nil {
-		pub.Year = payload.Year
-	}
-	return &pub
-}
-
-// UpdateArticlePayload is the article update action payload.
-type UpdateArticlePayload struct {
-	Abstract           *string `form:"abstract,omitempty" json:"abstract,omitempty" yaml:"abstract,omitempty" xml:"abstract,omitempty"`
-	Authors            *string `form:"authors,omitempty" json:"authors,omitempty" yaml:"authors,omitempty" xml:"authors,omitempty"`
-	CitedAmount        *int    `form:"cited_amount,omitempty" json:"cited_amount,omitempty" yaml:"cited_amount,omitempty" xml:"cited_amount,omitempty"`
-	CitedBy            *string `form:"cited_by,omitempty" json:"cited_by,omitempty" yaml:"cited_by,omitempty" xml:"cited_by,omitempty"`
-	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
-	Doi                *string `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
-	GotPdf             *bool   `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
-	Journal            *string `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`
-	Language           *string `form:"language,omitempty" json:"language,omitempty" yaml:"language,omitempty" xml:"language,omitempty"`
-	Platform           *int    `form:"platform,omitempty" json:"platform,omitempty" yaml:"platform,omitempty" xml:"platform,omitempty"`
-	Publisher          *string `form:"publisher,omitempty" json:"publisher,omitempty" yaml:"publisher,omitempty" xml:"publisher,omitempty"`
-	Query              *string `form:"query,omitempty" json:"query,omitempty" yaml:"query,omitempty" xml:"query,omitempty"`
-	QueryPlatform      *string `form:"query_platform,omitempty" json:"query_platform,omitempty" yaml:"query_platform,omitempty" xml:"query_platform,omitempty"`
-	SearchResultNumber *int    `form:"search_result_number,omitempty" json:"search_result_number,omitempty" yaml:"search_result_number,omitempty" xml:"search_result_number,omitempty"`
-	Status             *int    `form:"status,omitempty" json:"status,omitempty" yaml:"status,omitempty" xml:"status,omitempty"`
-	Title              *string `form:"title,omitempty" json:"title,omitempty" yaml:"title,omitempty" xml:"title,omitempty"`
-	Type               *string `form:"type,omitempty" json:"type,omitempty" yaml:"type,omitempty" xml:"type,omitempty"`
-	URL                *string `form:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty" xml:"url,omitempty"`
-	Year               *int    `form:"year,omitempty" json:"year,omitempty" yaml:"year,omitempty" xml:"year,omitempty"`
-}
-
-// OK sends a HTTP response with status code 200.
-func (ctx *UpdateArticleContext) OK(r *Article) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.article+json")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
-}
-
-// BadRequest sends a HTTP response with status code 400.
-func (ctx *UpdateArticleContext) BadRequest(r error) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
-}
-
-// NotFound sends a HTTP response with status code 404.
-func (ctx *UpdateArticleContext) NotFound() error {
-	ctx.ResponseData.WriteHeader(404)
-	return nil
-}
-
-// InternalServerError sends a HTTP response with status code 500.
-func (ctx *UpdateArticleContext) InternalServerError() error {
-	ctx.ResponseData.WriteHeader(500)
-	return nil
-}
-
-// HealthHealthContext provides the health health action context.
-type HealthHealthContext struct {
-	context.Context
-	*goa.ResponseData
-	*goa.RequestData
-}
-
-// NewHealthHealthContext parses the incoming request URL and body, performs validations and creates the
-// context used by the health controller health action.
-func NewHealthHealthContext(ctx context.Context, r *http.Request, service *goa.Service) (*HealthHealthContext, error) {
-	var err error
-	resp := goa.ContextResponse(ctx)
-	resp.Service = service
-	req := goa.ContextRequest(ctx)
-	req.Request = r
-	rctx := HealthHealthContext{Context: ctx, ResponseData: resp, RequestData: req}
-	return &rctx, err
-}
-
-// OK sends a HTTP response with status code 200.
-func (ctx *HealthHealthContext) OK(r *Health) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.health+json")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
-}
-
-// BadRequest sends a HTTP response with status code 400.
-func (ctx *HealthHealthContext) BadRequest(r error) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
-	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
-}
-
-// RefreshJWTContext provides the jwt refresh action context.
-type RefreshJWTContext struct {
-	context.Context
-	*goa.ResponseData
-	*goa.RequestData
-}
-
-// NewRefreshJWTContext parses the incoming request URL and body, performs validations and creates the
-// context used by the jwt controller refresh action.
-func NewRefreshJWTContext(ctx context.Context, r *http.Request, service *goa.Service) (*RefreshJWTContext, error) {
-	var err error
-	resp := goa.ContextResponse(ctx)
-	resp.Service = service
-	req := goa.ContextRequest(ctx)
-	req.Request = r
-	rctx := RefreshJWTContext{Context: ctx, ResponseData: resp, RequestData: req}
-	return &rctx, err
-}
-
-// OK sends a HTTP response with status code 200.
-func (ctx *RefreshJWTContext) OK(resp []byte) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "text/plain")
-	}
-	ctx.ResponseData.WriteHeader(200)
-	_, err := ctx.ResponseData.Write(resp)
-	return err
-}
-
-// SigninJWTContext provides the jwt signin action context.
-type SigninJWTContext struct {
-	context.Context
-	*goa.ResponseData
-	*goa.RequestData
-}
-
-// NewSigninJWTContext parses the incoming request URL and body, performs validations and creates the
-// context used by the jwt controller signin action.
-func NewSigninJWTContext(ctx context.Context, r *http.Request, service *goa.Service) (*SigninJWTContext, error) {
-	var err error
-	resp := goa.ContextResponse(ctx)
-	resp.Service = service
-	req := goa.ContextRequest(ctx)
-	req.Request = r
-	rctx := SigninJWTContext{Context: ctx, ResponseData: resp, RequestData: req}
-	return &rctx, err
-}
-
-// OK sends a HTTP response with status code 200.
-func (ctx *SigninJWTContext) OK(resp []byte) error {
-	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "text/plain")
-	}
-	ctx.ResponseData.WriteHeader(200)
-	_, err := ctx.ResponseData.Write(resp)
-	return err
-}
-
-// Unauthorized sends a HTTP response with status code 401.
-func (ctx *SigninJWTContext) Unauthorized() error {
-	ctx.ResponseData.WriteHeader(401)
 	return nil
 }
 
