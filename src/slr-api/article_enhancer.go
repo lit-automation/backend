@@ -137,7 +137,7 @@ func gatherAdditionalInfo(client crossref.Client, bibClient bibtex.Client, artic
 		res, err := client.GetOnDOI(articleFromDB.Doi)
 		if err != nil {
 			counter.Decr()
-			log.WithError(err).WithField(logfields.ArticleID, article.ID).Errorf("err querying for work")
+			log.WithError(err).WithFields(log.Fields{logfields.ArticleID: articleFromDB.ID, logfields.ArticleDOI: articleFromDB.Doi}).Errorf("err querying for work")
 			return
 		}
 		counter.Decr()
@@ -146,7 +146,7 @@ func gatherAdditionalInfo(client crossref.Client, bibClient bibtex.Client, artic
 		res, err := client.QueryWorks(article.Title)
 		if err != nil {
 			counter.Decr()
-			log.WithError(err).WithField(logfields.ArticleID, article.ID).Errorf("err querying for work")
+			log.WithError(err).WithField(log.Fields{logfields.ArticleID: articleFromDB.ID, logfields.ArticleTitle: articleFromDB.Title}).Errorf("err querying for work")
 			return
 		}
 		counter.Decr()
