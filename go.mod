@@ -9,7 +9,6 @@ require (
 	github.com/cdipaolo/goml v0.0.0-20190412180403-e1f51f713598
 	github.com/chromedp/cdproto v0.0.0-20200424080200-0de008e41fa0 // indirect
 	github.com/chromedp/chromedp v0.5.3
-	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set v1.7.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dimfeld/httppath v0.0.0-20170720192232-ee938bf73598 // indirect
@@ -39,6 +38,7 @@ require (
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/tools v0.0.0-20200301222351-066e0c02454c // indirect
 	gonum.org/v1/gonum v0.7.0 // indirect
+	google.golang.org/appengine v1.4.0
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/jdkato/prose.v2 v2.0.0-20190814032740-822d591a158c
 	gopkg.in/neurosnap/sentences.v1 v1.0.6 // indirect
