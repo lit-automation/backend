@@ -76,6 +76,7 @@ func (c *ScreeningController) Show(ctx *app.ShowScreeningContext) error {
 // Update runs the update action.
 func (c *ScreeningController) Update(ctx *app.UpdateScreeningContext) error {
 	// ScreeningController_Update: start_implement
+
 	projectID, err := ProjectIDFromContext(ctx, ctx.ProjectID)
 	if err != nil {
 		return err
@@ -94,9 +95,9 @@ func (c *ScreeningController) Update(ctx *app.UpdateScreeningContext) error {
 	if err != nil {
 		return ctx.InternalServerError()
 	}
-	article.Status = models.ArticleStatusNotUseful
+	article.Status = models.ArticleStatusExcluded
 	if ctx.Payload.Include {
-		article.Status = models.ArticleStatusUseful
+		article.Status = models.ArticleStatusIncludedOnAbstract
 	}
 	err = DB.ArticleDB.Update(ctx, article)
 	if err != nil {

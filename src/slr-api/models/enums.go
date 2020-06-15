@@ -19,27 +19,30 @@ import (
 type ArticleStatus int64
 
 const (
-	ArticleStatusUnprocessed ArticleStatus = 1
-	ArticleStatusNotUseful   ArticleStatus = 2
-	ArticleStatusUseful      ArticleStatus = 3
-	ArticleStatusUnknown     ArticleStatus = 4
-	ArticleStatusDuplicate   ArticleStatus = 5
+	ArticleStatusUnprocessed        ArticleStatus = 1
+	ArticleStatusExcluded           ArticleStatus = 2
+	ArticleStatusIncludedOnAbstract ArticleStatus = 3
+	ArticleStatusIncluded           ArticleStatus = 4
+	ArticleStatusDuplicate          ArticleStatus = 5
+	ArticleStatusUnknown            ArticleStatus = 6
 )
 
 var articleStatusStrings = map[int64]string{
 	1: "Unprocessed",
-	2: "NotUseful",
-	3: "Useful",
-	4: "Unknown",
+	2: "Excluded",
+	3: "IncludedOnAbstract",
+	4: "Included",
 	5: "Duplicate",
+	6: "Unknown",
 }
 
 var articleStatusStringMap = map[string]ArticleStatus{
-	"Unprocessed": ArticleStatusUnprocessed,
-	"NotUseful":   ArticleStatusNotUseful,
-	"Useful":      ArticleStatusUseful,
-	"Unknown":     ArticleStatusUnknown,
-	"Duplicate":   ArticleStatusDuplicate,
+	"Unprocessed":        ArticleStatusUnprocessed,
+	"Excluded":           ArticleStatusExcluded,
+	"IncludedOnAbstract": ArticleStatusIncludedOnAbstract,
+	"Included":           ArticleStatusIncluded,
+	"Duplicate":          ArticleStatusDuplicate,
+	"Unknown":            ArticleStatusUnknown,
 }
 
 func (u *ArticleStatus) Scan(value interface{}) error {

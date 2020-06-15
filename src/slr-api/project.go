@@ -114,15 +114,22 @@ func (c *ProjectController) CreateFromCSV(ctx *app.CreateFromCSVProjectContext) 
 // Graph runs the graph action.
 func (c *ProjectController) Graph(ctx *app.GraphProjectContext) error {
 	// ProjectController_Graph: start_implement
+
 	projectID, err := ProjectIDFromContext(ctx, ctx.ProjectID)
 	if err != nil {
 		return err
 	}
-	articles, err := DB.ArticleDB.ListOnStatus(ctx, projectID, models.ArticleStatusUseful)
+	articles, err := DB.ArticleDB.ListOnStatus(ctx, projectID, models.ArticleStatusIncluded)
 	if err != nil {
 		log.WithError(err).WithField(logfields.ProjectID, projectID).Error("unable to list articles")
 		return ErrInternal("Unable to retrieve graph")
 	}
+	articlesAbstract, err := DB.ArticleDB.ListOnStatus(ctx, projectID, models.ArticleStatusIncludedOnAbstract)
+	if err != nil {
+		log.WithError(err).WithField(logfields.ProjectID, projectID).Error("unable to list articles")
+		return ErrInternal("Unable to retrieve graph")
+	}
+	articles = append(articles, articlesAbstract...)
 	idMap, err := c.BuildGraphIDList(articles)
 	if err != nil {
 		return ErrInternal("Unable to retrieve graph")

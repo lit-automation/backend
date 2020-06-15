@@ -33,7 +33,7 @@ func main() {
 	go enhanceArticles()
 
 	screeningChan = make(chan uuid.UUID, 500)
-	go autoScreen()
+	go autoScreenAbstract()
 
 	// Create service
 	service := goa.New("SLR Automation")

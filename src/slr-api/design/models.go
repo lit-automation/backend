@@ -19,10 +19,11 @@ var _ = StorageGroup("slrautomation", func() {
 
 		Enum("ArticleStatus", func() {
 			Value("Unprocessed", 1)
-			Value("NotUseful", 2)
-			Value("Useful", 3)
-			Value("Unknown", 4)
+			Value("Excluded", 2)
+			Value("IncludedOnAbstract", 3)
+			Value("Included", 4)
 			Value("Duplicate", 5)
+			Value("Unknown", 6)
 		})
 
 		Enum("ScopeType", func() {

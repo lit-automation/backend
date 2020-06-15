@@ -299,7 +299,7 @@ func SanitizeToken(tok prose.Token) string {
 
 var screeningChan chan (uuid.UUID)
 
-func autoScreen() {
+func autoScreenAbstract() {
 	for {
 		projectID := <-screeningChan
 		articles, err := DB.ArticleDB.ListOnStatus(context.Background(), projectID, models.ArticleStatusUnprocessed)
@@ -315,9 +315,9 @@ func autoScreen() {
 			if err != nil {
 				log.Errorf("Err predicting: %s", err)
 			}
-			article.Status = models.ArticleStatusUseful
+			article.Status = models.ArticleStatusExcluded
 			if res.Tfidf.Class == "Exclude" {
-				article.Status = models.ArticleStatusNotUseful
+				article.Status = models.ArticleStatusIncludedOnAbstract
 			}
 			err = DB.ArticleDB.Update(context.Background(), article)
 			if err != nil {

@@ -32,248 +32,6 @@ func initService(service *goa.Service) {
 	service.Decoder.Register(goa.NewJSONDecoder, "*/*")
 }
 
-// ProjectController is the controller interface for the Project actions.
-type ProjectController interface {
-	goa.Muxer
-	Create(*CreateProjectContext) error
-	CreateFromCSV(*CreateFromCSVProjectContext) error
-	Graph(*GraphProjectContext) error
-	Latest(*LatestProjectContext) error
-	List(*ListProjectContext) error
-	RemoveDuplicates(*RemoveDuplicatesProjectContext) error
-	Show(*ShowProjectContext) error
-	Update(*UpdateProjectContext) error
-}
-
-// MountProjectController "mounts" a Project resource controller on the given service.
-func MountProjectController(service *goa.Service, ctrl ProjectController) {
-	initService(service)
-	var h goa.Handler
-	service.Mux.Handle("OPTIONS", "/v1/project", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
-	service.Mux.Handle("OPTIONS", "/v1/project/csv", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
-	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/graph", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
-	service.Mux.Handle("OPTIONS", "/v1/project/latest", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
-	service.Mux.Handle("OPTIONS", "/v1/project/list", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
-	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/removeduplicates", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
-	service.Mux.Handle("OPTIONS", "/v1/project/:projectID", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewCreateProjectContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		// Build the payload
-		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
-			rctx.Payload = rawPayload.(*CreateProjectPayload)
-		} else {
-			return goa.MissingPayloadError()
-		}
-		return ctrl.Create(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleProjectOrigin(h)
-	service.Mux.Handle("POST", "/v1/project", ctrl.MuxHandler("create", h, unmarshalCreateProjectPayload))
-	service.LogInfo("mount", "ctrl", "Project", "action", "Create", "route", "POST /v1/project", "security", "jwt")
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewCreateFromCSVProjectContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		// Build the payload
-		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
-			rctx.Payload = rawPayload.(*CreateFromCSVProjectPayload)
-		} else {
-			return goa.MissingPayloadError()
-		}
-		return ctrl.CreateFromCSV(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleProjectOrigin(h)
-	service.Mux.Handle("POST", "/v1/project/csv", ctrl.MuxHandler("createFromCSV", h, unmarshalCreateFromCSVProjectPayload))
-	service.LogInfo("mount", "ctrl", "Project", "action", "CreateFromCSV", "route", "POST /v1/project/csv", "security", "jwt")
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewGraphProjectContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		return ctrl.Graph(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleProjectOrigin(h)
-	service.Mux.Handle("GET", "/v1/project/:projectID/graph", ctrl.MuxHandler("graph", h, nil))
-	service.LogInfo("mount", "ctrl", "Project", "action", "Graph", "route", "GET /v1/project/:projectID/graph", "security", "jwt")
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewLatestProjectContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		return ctrl.Latest(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleProjectOrigin(h)
-	service.Mux.Handle("GET", "/v1/project/latest", ctrl.MuxHandler("latest", h, nil))
-	service.LogInfo("mount", "ctrl", "Project", "action", "Latest", "route", "GET /v1/project/latest", "security", "jwt")
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewListProjectContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		return ctrl.List(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleProjectOrigin(h)
-	service.Mux.Handle("GET", "/v1/project/list", ctrl.MuxHandler("list", h, nil))
-	service.LogInfo("mount", "ctrl", "Project", "action", "List", "route", "GET /v1/project/list", "security", "jwt")
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewRemoveDuplicatesProjectContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		return ctrl.RemoveDuplicates(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleProjectOrigin(h)
-	service.Mux.Handle("POST", "/v1/project/:projectID/removeduplicates", ctrl.MuxHandler("removeDuplicates", h, nil))
-	service.LogInfo("mount", "ctrl", "Project", "action", "RemoveDuplicates", "route", "POST /v1/project/:projectID/removeduplicates", "security", "jwt")
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewShowProjectContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		return ctrl.Show(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleProjectOrigin(h)
-	service.Mux.Handle("GET", "/v1/project/:projectID", ctrl.MuxHandler("show", h, nil))
-	service.LogInfo("mount", "ctrl", "Project", "action", "Show", "route", "GET /v1/project/:projectID", "security", "jwt")
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewUpdateProjectContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		// Build the payload
-		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
-			rctx.Payload = rawPayload.(*UpdateProjectPayload)
-		} else {
-			return goa.MissingPayloadError()
-		}
-		return ctrl.Update(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleProjectOrigin(h)
-	service.Mux.Handle("PUT", "/v1/project/:projectID", ctrl.MuxHandler("update", h, unmarshalUpdateProjectPayload))
-	service.LogInfo("mount", "ctrl", "Project", "action", "Update", "route", "PUT /v1/project/:projectID", "security", "jwt")
-}
-
-// handleProjectOrigin applies the CORS response headers corresponding to the origin.
-func handleProjectOrigin(h goa.Handler) goa.Handler {
-
-	return func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		origin := req.Header.Get("Origin")
-		if origin == "" {
-			// Not a CORS request
-			return h(ctx, rw, req)
-		}
-		if cors.MatchOrigin(origin, "*") {
-			ctx = goa.WithLogContext(ctx, "origin", origin)
-			rw.Header().Set("Access-Control-Allow-Origin", origin)
-			rw.Header().Set("Access-Control-Expose-Headers", "X-List-Count")
-			rw.Header().Set("Access-Control-Max-Age", "600")
-			rw.Header().Set("Access-Control-Allow-Credentials", "true")
-			if acrm := req.Header.Get("Access-Control-Request-Method"); acrm != "" {
-				// We are handling a preflight request
-				rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-				rw.Header().Set("Access-Control-Allow-Headers", "Authorization, X-Pin, X-Platform, content-type, X-Vendor-id, x-list-limit, x-list-page, x-list-filter, X-List-Count, Access-Control-Allow-Origin, accept")
-			}
-			return h(ctx, rw, req)
-		}
-
-		return h(ctx, rw, req)
-	}
-}
-
-// unmarshalCreateProjectPayload unmarshals the request body into the context request data Payload field.
-func unmarshalCreateProjectPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
-	payload := &createProjectPayload{}
-	if err := service.DecodeRequest(req, payload); err != nil {
-		return err
-	}
-	goa.ContextRequest(ctx).Payload = payload.Publicize()
-	return nil
-}
-
-// unmarshalCreateFromCSVProjectPayload unmarshals the request body into the context request data Payload field.
-func unmarshalCreateFromCSVProjectPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
-	payload := &createFromCSVProjectPayload{}
-	if err := service.DecodeRequest(req, payload); err != nil {
-		return err
-	}
-	if err := payload.Validate(); err != nil {
-		// Initialize payload with private data structure so it can be logged
-		goa.ContextRequest(ctx).Payload = payload
-		return err
-	}
-	goa.ContextRequest(ctx).Payload = payload.Publicize()
-	return nil
-}
-
-// unmarshalUpdateProjectPayload unmarshals the request body into the context request data Payload field.
-func unmarshalUpdateProjectPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
-	payload := &updateProjectPayload{}
-	if err := service.DecodeRequest(req, payload); err != nil {
-		return err
-	}
-	goa.ContextRequest(ctx).Payload = payload.Publicize()
-	return nil
-}
-
 // ArticleController is the controller interface for the Article actions.
 type ArticleController interface {
 	goa.Muxer
@@ -587,6 +345,248 @@ func handleJWTOrigin(h goa.Handler) goa.Handler {
 
 		return h(ctx, rw, req)
 	}
+}
+
+// ProjectController is the controller interface for the Project actions.
+type ProjectController interface {
+	goa.Muxer
+	Create(*CreateProjectContext) error
+	CreateFromCSV(*CreateFromCSVProjectContext) error
+	Graph(*GraphProjectContext) error
+	Latest(*LatestProjectContext) error
+	List(*ListProjectContext) error
+	RemoveDuplicates(*RemoveDuplicatesProjectContext) error
+	Show(*ShowProjectContext) error
+	Update(*UpdateProjectContext) error
+}
+
+// MountProjectController "mounts" a Project resource controller on the given service.
+func MountProjectController(service *goa.Service, ctrl ProjectController) {
+	initService(service)
+	var h goa.Handler
+	service.Mux.Handle("OPTIONS", "/v1/project", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/csv", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/graph", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/latest", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/list", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/removeduplicates", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID", ctrl.MuxHandler("preflight", handleProjectOrigin(cors.HandlePreflight()), nil))
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewCreateProjectContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*CreateProjectPayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.Create(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleProjectOrigin(h)
+	service.Mux.Handle("POST", "/v1/project", ctrl.MuxHandler("create", h, unmarshalCreateProjectPayload))
+	service.LogInfo("mount", "ctrl", "Project", "action", "Create", "route", "POST /v1/project", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewCreateFromCSVProjectContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*CreateFromCSVProjectPayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.CreateFromCSV(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleProjectOrigin(h)
+	service.Mux.Handle("POST", "/v1/project/csv", ctrl.MuxHandler("createFromCSV", h, unmarshalCreateFromCSVProjectPayload))
+	service.LogInfo("mount", "ctrl", "Project", "action", "CreateFromCSV", "route", "POST /v1/project/csv", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewGraphProjectContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Graph(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleProjectOrigin(h)
+	service.Mux.Handle("GET", "/v1/project/:projectID/graph", ctrl.MuxHandler("graph", h, nil))
+	service.LogInfo("mount", "ctrl", "Project", "action", "Graph", "route", "GET /v1/project/:projectID/graph", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewLatestProjectContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Latest(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleProjectOrigin(h)
+	service.Mux.Handle("GET", "/v1/project/latest", ctrl.MuxHandler("latest", h, nil))
+	service.LogInfo("mount", "ctrl", "Project", "action", "Latest", "route", "GET /v1/project/latest", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewListProjectContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.List(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleProjectOrigin(h)
+	service.Mux.Handle("GET", "/v1/project/list", ctrl.MuxHandler("list", h, nil))
+	service.LogInfo("mount", "ctrl", "Project", "action", "List", "route", "GET /v1/project/list", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewRemoveDuplicatesProjectContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.RemoveDuplicates(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleProjectOrigin(h)
+	service.Mux.Handle("POST", "/v1/project/:projectID/removeduplicates", ctrl.MuxHandler("removeDuplicates", h, nil))
+	service.LogInfo("mount", "ctrl", "Project", "action", "RemoveDuplicates", "route", "POST /v1/project/:projectID/removeduplicates", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewShowProjectContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Show(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleProjectOrigin(h)
+	service.Mux.Handle("GET", "/v1/project/:projectID", ctrl.MuxHandler("show", h, nil))
+	service.LogInfo("mount", "ctrl", "Project", "action", "Show", "route", "GET /v1/project/:projectID", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewUpdateProjectContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*UpdateProjectPayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.Update(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleProjectOrigin(h)
+	service.Mux.Handle("PUT", "/v1/project/:projectID", ctrl.MuxHandler("update", h, unmarshalUpdateProjectPayload))
+	service.LogInfo("mount", "ctrl", "Project", "action", "Update", "route", "PUT /v1/project/:projectID", "security", "jwt")
+}
+
+// handleProjectOrigin applies the CORS response headers corresponding to the origin.
+func handleProjectOrigin(h goa.Handler) goa.Handler {
+
+	return func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		origin := req.Header.Get("Origin")
+		if origin == "" {
+			// Not a CORS request
+			return h(ctx, rw, req)
+		}
+		if cors.MatchOrigin(origin, "*") {
+			ctx = goa.WithLogContext(ctx, "origin", origin)
+			rw.Header().Set("Access-Control-Allow-Origin", origin)
+			rw.Header().Set("Access-Control-Expose-Headers", "X-List-Count")
+			rw.Header().Set("Access-Control-Max-Age", "600")
+			rw.Header().Set("Access-Control-Allow-Credentials", "true")
+			if acrm := req.Header.Get("Access-Control-Request-Method"); acrm != "" {
+				// We are handling a preflight request
+				rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+				rw.Header().Set("Access-Control-Allow-Headers", "Authorization, X-Pin, X-Platform, content-type, X-Vendor-id, x-list-limit, x-list-page, x-list-filter, X-List-Count, Access-Control-Allow-Origin, accept")
+			}
+			return h(ctx, rw, req)
+		}
+
+		return h(ctx, rw, req)
+	}
+}
+
+// unmarshalCreateProjectPayload unmarshals the request body into the context request data Payload field.
+func unmarshalCreateProjectPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &createProjectPayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
+}
+
+// unmarshalCreateFromCSVProjectPayload unmarshals the request body into the context request data Payload field.
+func unmarshalCreateFromCSVProjectPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &createFromCSVProjectPayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	if err := payload.Validate(); err != nil {
+		// Initialize payload with private data structure so it can be logged
+		goa.ContextRequest(ctx).Payload = payload
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
+}
+
+// unmarshalUpdateProjectPayload unmarshals the request body into the context request data Payload field.
+func unmarshalUpdateProjectPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &updateProjectPayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
 }
 
 // ScreeningController is the controller interface for the Screening actions.
