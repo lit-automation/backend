@@ -2,15 +2,16 @@ package main
 
 import (
 	"encoding/csv"
+	"io"
+	"os"
+	"strconv"
+
 	"github.com/goadesign/goa"
 	"github.com/gofrs/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/packages/logfields"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/models"
-	"io"
-	"os"
-	"strconv"
 )
 
 // ArticleController implements the article resource.
@@ -98,6 +99,8 @@ func (c *ArticleController) Download(ctx *app.DownloadArticleContext) error {
 		"id",
 		"authors",
 		"abstract",
+		"full_text",
+		"status",
 		"cited_amount",
 		"doi",
 		"journal",
@@ -109,6 +112,7 @@ func (c *ArticleController) Download(ctx *app.DownloadArticleContext) error {
 		"publisher",
 		"query",
 		"comment",
+		"bibtex",
 	})
 	if err != nil {
 		log.WithError(err).Errorf("unable to write csv file")
@@ -121,6 +125,8 @@ func (c *ArticleController) Download(ctx *app.DownloadArticleContext) error {
 			article.ID.String(),
 			article.Authors,
 			article.Abstract,
+			article.FullText,
+			article.Status.String(),
 			strconv.Itoa(article.CitedAmount),
 			article.Doi,
 			article.Journal,
@@ -132,6 +138,7 @@ func (c *ArticleController) Download(ctx *app.DownloadArticleContext) error {
 			article.Publisher,
 			article.Query,
 			article.Comment,
+			article.Bibtex,
 		})
 		if err != nil {
 			log.WithError(err).Errorf("unable to write csv file")
