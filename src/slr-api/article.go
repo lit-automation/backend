@@ -2,15 +2,16 @@ package main
 
 import (
 	"encoding/csv"
+	"io"
+	"os"
+	"strconv"
+
 	"github.com/goadesign/goa"
 	"github.com/gofrs/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/packages/logfields"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/models"
-	"io"
-	"os"
-	"strconv"
 )
 
 // ArticleController implements the article resource.
@@ -226,7 +227,6 @@ func (c *ArticleController) Update(ctx *app.UpdateArticleContext) error {
 	if err != nil {
 		return err
 	}
-	// TODO add security for article & project
 	orgArticle, err := DB.ArticleDB.Get(ctx, ctx.ArticleID)
 	if err != nil {
 		return ErrBadRequest("Article not found")

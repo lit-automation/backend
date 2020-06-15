@@ -176,7 +176,6 @@ func (m *ArticleDB) ListPaginated(ctx *app.ListArticleContext, projectID uuid.UU
 	if ctx.Title != nil {
 		query = query.Where("LOWER(title) LIKE '%" + strings.ToLower(*ctx.Title) + "%'")
 	}
-	// TODO add filtering
 	var count Count
 	err := query.
 		Select("COUNT(id)").
@@ -288,7 +287,7 @@ func (a *Article) SetCitedBy(c []*CitedBy) error {
 func (m *ArticleDB) RetrieveNotSnowBalled(ctx context.Context, projectID uuid.UUID) (*Article, error) {
 	var obj Article
 
-	err := m.Db.Table(m.TableName()).Where("(backward_snowball = false OR backward_snowball IS NULL) AND project_id = ? AND doi != ''", projectID).Limit(1).Find(&obj).Error
+	err := m.Db.Table(m.TableName()).Where("(backward_snowball = false OR backward_snowball IS NULL) AND (status = ? OR status = ?) AND project_id = ? AND doi != ''", ArticleStatusIncludedOnAbstract, ArticleStatusIncluded, projectID).Limit(1).Find(&obj).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
