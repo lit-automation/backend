@@ -19,6 +19,7 @@ import (
 // UpdateArticlePayload is the article update action payload.
 type ArticlePayload struct {
 	Abstract           *string `form:"abstract,omitempty" json:"abstract,omitempty" yaml:"abstract,omitempty" xml:"abstract,omitempty"`
+	FullText           *string `form:"full_text,omitempty" json:"full_text,omitempty" yaml:"full_text,omitempty" xml:"full_text,omitempty"`
 	Authors            *string `form:"authors,omitempty" json:"authors,omitempty" yaml:"authors,omitempty" xml:"authors,omitempty"`
 	CitedAmount        *int    `form:"cited_amount,omitempty" json:"cited_amount,omitempty" yaml:"cited_amount,omitempty" xml:"cited_amount,omitempty"`
 	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
@@ -69,6 +70,9 @@ func ArticleFromBytes(b []byte, update bool) (*Article, error) {
 	article := &Article{}
 	if articlePayload.Abstract != nil {
 		article.Abstract = *articlePayload.Abstract
+	}
+	if articlePayload.FullText != nil {
+		article.FullText = *articlePayload.FullText
 	}
 	if articlePayload.Authors != nil {
 		article.Authors = *articlePayload.Authors

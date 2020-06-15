@@ -56,6 +56,7 @@ type createArticlePayload struct {
 	CitedBy            *string `form:"cited_by,omitempty" json:"cited_by,omitempty" yaml:"cited_by,omitempty" xml:"cited_by,omitempty"`
 	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
 	Doi                *string `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
+	FullText           *string `form:"full_text,omitempty" json:"full_text,omitempty" yaml:"full_text,omitempty" xml:"full_text,omitempty"`
 	GotPdf             *bool   `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
 	Journal            *string `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`
 	Language           *string `form:"language,omitempty" json:"language,omitempty" yaml:"language,omitempty" xml:"language,omitempty"`
@@ -91,6 +92,9 @@ func (payload *createArticlePayload) Publicize() *CreateArticlePayload {
 	}
 	if payload.Doi != nil {
 		pub.Doi = payload.Doi
+	}
+	if payload.FullText != nil {
+		pub.FullText = payload.FullText
 	}
 	if payload.GotPdf != nil {
 		pub.GotPdf = payload.GotPdf
@@ -142,6 +146,7 @@ type CreateArticlePayload struct {
 	CitedBy            *string `form:"cited_by,omitempty" json:"cited_by,omitempty" yaml:"cited_by,omitempty" xml:"cited_by,omitempty"`
 	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
 	Doi                *string `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
+	FullText           *string `form:"full_text,omitempty" json:"full_text,omitempty" yaml:"full_text,omitempty" xml:"full_text,omitempty"`
 	GotPdf             *bool   `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
 	Journal            *string `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`
 	Language           *string `form:"language,omitempty" json:"language,omitempty" yaml:"language,omitempty" xml:"language,omitempty"`
@@ -498,6 +503,7 @@ type updateArticlePayload struct {
 	CitedBy            *string `form:"cited_by,omitempty" json:"cited_by,omitempty" yaml:"cited_by,omitempty" xml:"cited_by,omitempty"`
 	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
 	Doi                *string `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
+	FullText           *string `form:"full_text,omitempty" json:"full_text,omitempty" yaml:"full_text,omitempty" xml:"full_text,omitempty"`
 	GotPdf             *bool   `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
 	Journal            *string `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`
 	Language           *string `form:"language,omitempty" json:"language,omitempty" yaml:"language,omitempty" xml:"language,omitempty"`
@@ -533,6 +539,9 @@ func (payload *updateArticlePayload) Publicize() *UpdateArticlePayload {
 	}
 	if payload.Doi != nil {
 		pub.Doi = payload.Doi
+	}
+	if payload.FullText != nil {
+		pub.FullText = payload.FullText
 	}
 	if payload.GotPdf != nil {
 		pub.GotPdf = payload.GotPdf
@@ -584,6 +593,7 @@ type UpdateArticlePayload struct {
 	CitedBy            *string `form:"cited_by,omitempty" json:"cited_by,omitempty" yaml:"cited_by,omitempty" xml:"cited_by,omitempty"`
 	Comment            *string `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
 	Doi                *string `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
+	FullText           *string `form:"full_text,omitempty" json:"full_text,omitempty" yaml:"full_text,omitempty" xml:"full_text,omitempty"`
 	GotPdf             *bool   `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
 	Journal            *string `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`
 	Language           *string `form:"language,omitempty" json:"language,omitempty" yaml:"language,omitempty" xml:"language,omitempty"`

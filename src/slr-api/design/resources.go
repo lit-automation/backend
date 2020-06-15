@@ -10,6 +10,7 @@ var articlePayload = func() {
 	Attribute("cited_amount", Integer)
 	Attribute("search_result_number", Integer)
 	Attribute("abstract", String)
+	Attribute("full_text", String)
 	Attribute("language", String)
 	Attribute("query", String)
 	Attribute("query_platform", String)
