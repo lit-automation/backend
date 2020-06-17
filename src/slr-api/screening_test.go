@@ -181,8 +181,8 @@ func (s *ScreenTestSuite) TestOutputCreator() {
 			f1 = 1
 		}
 		predErr := float64(res.FalsePositive+res.FalseNegative) / float64(res.TruePositive+res.FalsePositive+res.TrueNegative+res.FalseNegative)
-
-		fmt.Println(fmt.Sprintf(`%d,"%f","%f","%f","%f","%f","%f","%f","%f","%f","%f"`, k, f1, precision, recall, predErr, res.Correct, res.Incorrect, res.FalseNegative, res.FalsePositive, res.TrueNegative, res.TruePositive))
+		fmt.Printf(`%d,"%f","%f","%f","%f","%f","%f","%f","%f","%f","%f"`, k, f1, precision, recall, predErr, res.Correct, res.Incorrect, res.FalseNegative, res.FalsePositive, res.TrueNegative, res.TruePositive)
+		fmt.Println()
 	}
 }
 
