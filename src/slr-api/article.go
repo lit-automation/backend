@@ -37,6 +37,15 @@ func (c *ArticleController) Create(ctx *app.CreateArticleContext) error {
 		log.WithError(err).WithField(logfields.ProjectID, projectID).Error("unable to create article from payload")
 		return ErrBadRequest("incorrect payload")
 	}
+	err = article.SetAbstractDoc()
+	if err != nil {
+		log.Errorf("unable to set abstract document: %s", err)
+	}
+	err = article.SetFullTextDoc()
+	if err != nil {
+		log.Errorf("unable to set full text document: %s", err)
+	}
+	article.Preprocessed = true
 	article.ProjectID = projectID
 	err = DB.ArticleDB.Add(ctx, article)
 	if err != nil {
@@ -242,6 +251,14 @@ func (c *ArticleController) Update(ctx *app.UpdateArticleContext) error {
 	if err != nil {
 		log.WithError(err).WithField(logfields.ProjectID, projectID).Error("unable to create article from payload")
 		return ErrBadRequest("Incorrect payload")
+	}
+	err = article.SetAbstractDoc()
+	if err != nil {
+		log.Errorf("unable to set abstract document: %s", err)
+	}
+	err = article.SetFullTextDoc()
+	if err != nil {
+		log.Errorf("unable to set full text document: %s", err)
 	}
 	article.ID = ctx.ArticleID
 	if ctx.Payload.CitedBy != nil {

@@ -1,17 +1,30 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
+	"github.com/wimspaargaren/slr-automation/src/packages/database"
+	"github.com/wimspaargaren/slr-automation/src/slr-api/models"
+)
+
+const (
+	currentSet = "article_set_large_loggin_100_unbalanced"
+)
+
+var (
+	screeningTestSetSizes = []int{4, 6, 8, 10, 20, 30, 40, 50, 75, 90}
 )
 
 // TestArticle result for training and verifying our model
@@ -19,10 +32,26 @@ type TestArticle struct {
 	Title    string `json:"title"`
 	Abstract string `json:"abstract"`
 	Include  bool   `json:"include"`
+	Article  *models.Article
 }
 
 type ScreenTestSuite struct {
 	suite.Suite
+
+	DB *gorm.DB
+
+	transact *gorm.DB
+
+	DBManager *DBManager
+}
+
+func (s *ScreenTestSuite) SetupTest() {
+	s.transact = s.DB.Begin()
+	s.DBManager = NewDBManager(s.transact)
+}
+
+func (s *ScreenTestSuite) TearDownTest() {
+	s.transact.Rollback()
 }
 
 func (s *ScreenTestSuite) TestAccuracySmallSet() {
@@ -32,32 +61,20 @@ func (s *ScreenTestSuite) TestAccuracySmallSet() {
 	err = json.Unmarshal([]byte(file), &testData)
 	s.Require().NoError(err)
 
+	testData = s.prepareTestData(testData)
 	modelID := uuid.Must(uuid.NewV4())
-	training := 1
 
-	trainedInclude := 0
-	trainedExclude := 0
+	err = TrainModel(modelID, testData[0].Article, true, testData[0].Include)
+	s.Require().NoError(err)
 
-	for _, art := range testData {
-		switch art.Include {
-		case true:
-			if trainedInclude < training {
-				err := TrainModel(modelID, art.Abstract, art.Title, art.Include)
-				s.Require().NoError(err)
-				trainedInclude++
-			}
-		case false:
-			err := TrainModel(modelID, art.Abstract, art.Title, art.Include)
-			s.Require().NoError(err)
-			trainedExclude++
-		}
-	}
+	err = TrainModel(modelID, testData[2].Article, true, testData[2].Include)
+	s.Require().NoError(err)
 
 	tfIDFAccuracy := &AccuracyScore{Total: len(testData)}
 	tfAccuracy := &AccuracyScore{Total: len(testData)}
 
 	for _, art := range testData {
-		res, err := GetScreeningMediaForProject(modelID, art.Title, art.Abstract)
+		res, err := GetScreeningMediaForProject(modelID, art.Article, true)
 		s.Require().NoError(err)
 		tfIDFAccuracy.verifyResult(art.Include, res.Tfidf.Class)
 		tfAccuracy.verifyResult(art.Include, res.Tf.Class)
@@ -126,7 +143,7 @@ func (s *ScreenTestSuite) createBalancedTestData(testData []TestArticle) {
 }
 
 func (s *ScreenTestSuite) TestOutputCreator() {
-	file, err := ioutil.ReadFile("article_set_large_loggin_100_unbalancedtfidf.json")
+	file, err := ioutil.ReadFile(currentSet + "tfidf.json")
 	s.Require().NoError(err)
 	testData := make(map[int][]*AccuracyScore)
 	err = json.Unmarshal([]byte(file), &testData)
@@ -152,22 +169,125 @@ func (s *ScreenTestSuite) TestOutputCreator() {
 		res.TruePositive = res.TruePositive / float64(len(v))
 
 		precision := float64(res.TruePositive) / float64(res.TruePositive+res.FalsePositive)
+		if res.TruePositive+res.FalsePositive == 0 {
+			precision = 1
+		}
 		recall := float64(res.TruePositive) / float64(res.TruePositive+res.FalseNegative)
+		if res.TruePositive+res.FalseNegative == 0 {
+			recall = 1
+		}
 		f1 := float64(res.TruePositive*2) / float64(res.TruePositive*2+res.FalsePositive+res.FalseNegative)
+		if float64(res.TruePositive*2+res.FalsePositive+res.FalseNegative) == 0 {
+			f1 = 1
+		}
 		predErr := float64(res.FalsePositive+res.FalseNegative) / float64(res.TruePositive+res.FalsePositive+res.TrueNegative+res.FalseNegative)
 
-		fmt.Printf(`%d,"%f","%f","%f","%f","%f","%f","%f","%f","%f","%f"`, k, f1, precision, recall, predErr, res.Correct, res.Incorrect, res.FalseNegative, res.FalsePositive, res.TrueNegative, res.TruePositive)
+		fmt.Println(fmt.Sprintf(`%d,"%f","%f","%f","%f","%f","%f","%f","%f","%f","%f"`, k, f1, precision, recall, predErr, res.Correct, res.Incorrect, res.FalseNegative, res.FalsePositive, res.TrueNegative, res.TruePositive))
 	}
 }
 
-func (s *ScreenTestSuite) TestAccuracyLargeSet() {
-	fileName := "article_set_large_loggin_100_unbalanced"
+func (s *ScreenTestSuite) prepareTestData(testData []TestArticle) []TestArticle {
+	fmt.Println("Preparing data")
+	for i, art := range testData {
+		dbArtcle := &models.Article{
+			Title:       art.Title,
+			Abstract:    art.Abstract,
+			Keywords:    []byte("{}"),
+			Metadata:    []byte("{}"),
+			DocAbstract: []byte("{}"),
+			DocFullText: []byte("{}"),
+			CitedBy:     []byte("[]"),
+		}
+		err := dbArtcle.SetAbstractDoc()
+		s.Require().NoError(err)
+		err = s.DBManager.ArticleDB.Add(context.Background(), dbArtcle)
+		s.Require().NoError(err)
+		testData[i].Article = dbArtcle
+	}
+	fmt.Println("Done preparing")
+	return testData
+}
+
+func (s *ScreenTestSuite) TestActiveLearning() {
+	fileName := currentSet
 	file, err := ioutil.ReadFile("testdata/" + fileName + ".json")
 	s.Require().NoError(err)
 	testData := []TestArticle{}
 	err = json.Unmarshal([]byte(file), &testData)
 	s.Require().NoError(err)
-	trainingAmounts := []int{2, 6, 10, 20, 30, 50, 90}
+	testData = s.prepareTestData(testData)
+	trainingAmounts := append(screeningTestSetSizes, 0)
+	modelID := uuid.Must(uuid.NewV4())
+	trainedSet := []int{}
+	// Init for test
+	toTrainSet := []int{1, 0}
+	resultMapTF := make(map[int][]*AccuracyScore)
+	resultMapTFIDF := make(map[int][]*AccuracyScore)
+	for _, x := range trainingAmounts {
+		for i := range toTrainSet {
+			index := toTrainSet[i]
+			trainedSet = append(trainedSet, index)
+			err := TrainModel(modelID, testData[index].Article, true, testData[index].Include)
+			s.Require().NoError(err)
+		}
+		fmt.Println(len(trainedSet))
+		result := s.predictActiveSet(testData, trainedSet, modelID, resultMapTF, resultMapTFIDF)
+
+		sort.Slice(result, func(i, j int) bool {
+			return result[i].Confidence < result[j].Confidence
+		})
+		toTrainSet = []int{}
+		for j := 0; j < x-len(trainedSet); j++ {
+			toTrainSet = append(toTrainSet, result[j].Index)
+		}
+	}
+	s.writeMapToDisk(fileName+"tf.json", resultMapTF)
+	s.writeMapToDisk(fileName+"tfidf.json", resultMapTFIDF)
+}
+
+type ActiveLearningPredictor struct {
+	Index      int
+	Confidence float64
+}
+
+func (s *ScreenTestSuite) predictActiveSet(testData []TestArticle, trainedSet []int, modelID uuid.UUID, resultMapTF, resultMapTFIDF map[int][]*AccuracyScore) []ActiveLearningPredictor {
+	activeLearningPredictor := []ActiveLearningPredictor{}
+	tfIDFAccuracy := &AccuracyScore{Total: len(testData) - len(trainedSet)}
+	termFrequencyAccuracy := &AccuracyScore{Total: len(testData) - len(trainedSet)}
+	processed := 0
+	for i, art := range testData {
+		if isInTrainedSet(trainedSet, i) {
+			continue
+		}
+		processed++
+		res, err := GetScreeningMediaForProject(modelID, art.Article, true)
+		s.Require().NoError(err)
+		activeLearningPredictor = append(activeLearningPredictor, ActiveLearningPredictor{
+			Confidence: res.Tfidf.Confidence,
+			Index:      i,
+		})
+		tfIDFAccuracy.verifyResult(art.Include, res.Tfidf.Class)
+		termFrequencyAccuracy.verifyResult(art.Include, res.Tf.Class)
+	}
+
+	resultMapTF[len(trainedSet)] = append(resultMapTF[len(trainedSet)], termFrequencyAccuracy)
+	log.Infof("TFIDF:")
+	tfIDFAccuracy.PrintAccuracy()
+	resultMapTFIDF[len(trainedSet)] = append(resultMapTFIDF[len(trainedSet)], tfIDFAccuracy)
+	return activeLearningPredictor
+}
+
+func (s *ScreenTestSuite) TestAccuracyLargeSet() {
+	fileName := currentSet
+	file, err := ioutil.ReadFile("testdata/" + fileName + ".json")
+	s.Require().NoError(err)
+	testData := []TestArticle{}
+	err = json.Unmarshal([]byte(file), &testData)
+	s.Require().NoError(err)
+
+	testData = s.prepareTestData(testData)
+
+	trainingAmounts := append([]int{2}, screeningTestSetSizes...)
 	resultMapTF := make(map[int][]*AccuracyScore)
 	resultMapTFIDF := make(map[int][]*AccuracyScore)
 	for _, x := range trainingAmounts {
@@ -207,7 +327,7 @@ func (s *ScreenTestSuite) TestAccuracyLargeSet() {
 					}
 				}
 				trainedSet = append(trainedSet, i)
-				err := TrainModel(modelID, art.Abstract, art.Title, art.Include)
+				err := TrainModel(modelID, art.Article, true, art.Include)
 				s.Require().NoError(err)
 			}
 			log.Infof("Predicting")
@@ -242,7 +362,7 @@ func (s *ScreenTestSuite) predict(testData []TestArticle, trainedSet []int, mode
 			continue
 		}
 		processed++
-		res, err := GetScreeningMediaForProject(modelID, art.Title, art.Abstract)
+		res, err := GetScreeningMediaForProject(modelID, art.Article, true)
 		s.Require().NoError(err)
 		tfIDFAccuracy.verifyResult(art.Include, res.Tfidf.Class)
 		termFrequencyAccuracy.verifyResult(art.Include, res.Tf.Class)
@@ -300,6 +420,17 @@ func calcPercentage(x, y int) float64 {
 }
 
 func TestScreenTestSuite(t *testing.T) {
-	test := &ScreenTestSuite{}
+	m := []interface{}{
+		models.Article{},
+		models.Project{},
+		models.User{},
+	}
+	db, err := database.ConnectTest("slr", m)
+	if err != nil {
+		t.FailNow()
+	}
+	test := &ScreenTestSuite{
+		DB: db,
+	}
 	suite.Run(t, test)
 }

@@ -12,7 +12,7 @@ type DBManager struct {
 	UserDB    *models.UserDB
 }
 
-func NewDBManagaer(db *gorm.DB) *DBManager {
+func NewDBManager(db *gorm.DB) *DBManager {
 	return &DBManager{
 		DB:        db,
 		ArticleDB: models.NewArticleDB(db),

@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/middleware"
-	"github.com/gofrs/uuid"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/wimspaargaren/slr-automation/src/packages/environment"
@@ -28,12 +27,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("unable to connect to the database: %s", err)
 	}
-	DB = NewDBManagaer(db)
+	DB = NewDBManager(db)
 	// Run cron to gather additional article info
 	go enhanceArticles()
 
-	screeningChan = make(chan uuid.UUID, 500)
-	go autoScreenAbstract()
+	go preProcess()
 
 	// Create service
 	service := goa.New("SLR Automation")

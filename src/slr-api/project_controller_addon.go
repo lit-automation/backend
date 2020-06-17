@@ -50,6 +50,8 @@ func (c *ProjectController) ProcessCSV(tx *gorm.DB, projectID uuid.UUID, input s
 			Status:      models.ArticleStatusUnprocessed,
 			Keywords:    []byte("[]"),
 			Metadata:    []byte("{}"),
+			DocAbstract: []byte("{}"),
+			DocFullText: []byte("{}"),
 			CitedBy:     []byte("[]"),
 		}
 		for k, v := range columnMapper {

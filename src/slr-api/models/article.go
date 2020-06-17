@@ -32,14 +32,17 @@ type Article struct {
 	Comment            string
 	CreatedAt          time.Time
 	DeletedAt          *time.Time
+	DocAbstract        []byte `sql:"type:jsonb"`
+	DocFullText        []byte `sql:"type:jsonb"`
 	Doi                string
 	FullText           string
 	GotPdf             bool
 	Journal            string
 	Keywords           []byte `sql:"type:jsonb"`
 	Language           string
-	Metadata           []byte    `sql:"type:jsonb"`
-	Platform           Platform  `sql:"type:smallint"`                                 // enum Platform
+	Metadata           []byte   `sql:"type:jsonb"`
+	Platform           Platform `sql:"type:smallint"` // enum Platform
+	Preprocessed       bool
 	ProjectID          uuid.UUID `sql:"type:uuid" gorm:"index:idx_article_project_id"` // has many Article
 	Publisher          string
 	Query              string

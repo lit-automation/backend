@@ -11,10 +11,16 @@ import (
 	"github.com/goadesign/goa"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/jdkato/prose.v2"
 
 	uuid "github.com/gofrs/uuid"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
 )
+
+type ScreeningData struct {
+	Sentences []prose.Sentence
+	Tokens    []prose.Token
+}
 
 // UpdateArticlePayload is the article update action payload.
 type ArticlePayload struct {
@@ -131,6 +137,8 @@ func ArticleFromBytes(b []byte, update bool) (*Article, error) {
 
 	article.Keywords = []byte("{}")
 	article.Metadata = []byte("{}")
+	article.DocAbstract = []byte("{}")
+	article.DocFullText = []byte("{}")
 	article.CitedBy = []byte("[]")
 	return article, nil
 }
@@ -234,6 +242,18 @@ func (m *ArticleDB) ListNonDuplicatesForProject(ctx context.Context, projectID u
 	return objs, nil
 }
 
+// ListNotPreProcessed returns an array of Articles which are not yet preprocessed
+func (m *ArticleDB) ListNotPreProcessed(ctx context.Context) ([]*Article, error) {
+
+	var objs []*Article
+	err := m.Db.Table(m.TableName()).Where("preprocessed = false OR preprocessed IS NULL").Find(&objs).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return objs, nil
+}
+
 // ListOnStatus returns an array of Article
 func (m *ArticleDB) ListOnStatus(ctx context.Context, projectID uuid.UUID, status ArticleStatus) ([]*Article, error) {
 	defer goa.MeasureSince([]string{"goa", "db", "article", "list"}, time.Now())
@@ -296,4 +316,50 @@ func (m *ArticleDB) RetrieveNotSnowBalled(ctx context.Context, projectID uuid.UU
 		return nil, err
 	}
 	return &obj, nil
+}
+
+func (a *Article) SetAbstractDoc() error {
+	doc, err := prose.NewDocument(a.Title + " " + a.Abstract) //, prose.WithExtraction(false), prose.WithTokenization(false))
+	if err != nil {
+		return err
+	}
+	screeningData := ScreeningData{
+		Tokens:    doc.Tokens(),
+		Sentences: doc.Sentences(),
+	}
+	b, err := json.Marshal(screeningData)
+	if err != nil {
+		return err
+	}
+	a.DocAbstract = b
+	return nil
+}
+
+func (a *Article) GetAbstractDoc() (*ScreeningData, error) {
+	var doc ScreeningData
+	err := json.Unmarshal(a.DocAbstract, &doc)
+	return &doc, err
+}
+
+func (a *Article) SetFullTextDoc() error {
+	doc, err := prose.NewDocument(a.Title+" "+a.Abstract, prose.WithExtraction(false), prose.WithTokenization(false))
+	if err != nil {
+		return err
+	}
+	screeningData := ScreeningData{
+		Tokens:    doc.Tokens(),
+		Sentences: doc.Sentences(),
+	}
+	b, err := json.Marshal(screeningData)
+	if err != nil {
+		return err
+	}
+	a.DocFullText = b
+	return nil
+}
+
+func (a *Article) GetFullTextDoc() (*ScreeningData, error) {
+	var doc ScreeningData
+	err := json.Unmarshal(a.DocFullText, &doc)
+	return &doc, err
 }

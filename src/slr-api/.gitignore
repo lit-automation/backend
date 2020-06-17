@@ -8,6 +8,8 @@ csv
 Makefile
 screening-models
 testdatacreator
+fulltextcreator
 abstract-enhancer
 test.csv
 *.json
+.DS_Store

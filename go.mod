@@ -4,6 +4,9 @@ go 1.14
 
 require (
 	bitbucket.org/pkg/inflect v0.0.0-20130829110746-8961c3750a47 // indirect
+	code.sajari.com/docconv v1.1.0
+	github.com/JalfResi/justext v0.0.0-20170829062021-c0282dea7198 // indirect
+	github.com/advancedlogic/GoOse v0.0.0-20191112112754-e742535969c1 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/armon/go-metrics v0.3.2 // indirect
 	github.com/cdipaolo/goml v0.0.0-20190412180403-e1f51f713598
@@ -21,6 +24,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/jinzhu/gorm v1.9.11
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
+	github.com/levigross/exp-html v0.0.0-20120902181939-8df60c69a8f5 // indirect
 	github.com/lib/pq v1.1.1
 	github.com/manveru/faker v0.0.0-20171103152722-9fbc68a78c4d // indirect
 	github.com/manveru/gobdd v0.0.0-20131210092515-f1a17fdd710b // indirect
@@ -38,7 +42,7 @@ require (
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/tools v0.0.0-20200301222351-066e0c02454c // indirect
 	gonum.org/v1/gonum v0.7.0 // indirect
-	google.golang.org/appengine v1.4.0
+	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/jdkato/prose.v2 v2.0.0-20190814032740-822d591a158c
 	gopkg.in/neurosnap/sentences.v1 v1.0.6 // indirect

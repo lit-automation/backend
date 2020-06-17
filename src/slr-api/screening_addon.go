@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"sort"
@@ -61,8 +60,11 @@ func VerifyModel(projectID uuid.UUID) error {
 }
 
 // GetScreeningMediaForProject retrieve the predicted values for given article
-func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*app.Articlescreening, error) {
-	total, doc := getSanitizedText(title, abstract)
+func GetScreeningMediaForProject(projectID uuid.UUID, article *models.Article, abstractScreen bool) (*app.Articlescreening, error) {
+	total, doc, err := getSanitizedText(article, abstractScreen)
+	if err != nil {
+		return nil, err
+	}
 	stream := make(chan base.TextDatapoint, 100)
 	errors := make(chan error)
 
@@ -72,7 +74,7 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 	go model.OnlineLearn(errors)
 	sentenceTFIDF := ""
 	sentenceTF := ""
-	err := model.RestoreFromFile("screening-models/" + projectID.String())
+	err = model.RestoreFromFile("screening-models/" + projectID.String())
 	if err != nil {
 		log.Info("no model yet")
 	} else {
@@ -84,7 +86,7 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 			tfIDFWords[x.Word] = true
 		}
 		// Create sentence only of words occuring in idf set
-		for _, tok := range doc.Tokens() {
+		for _, tok := range doc.Tokens {
 			sanitizedToken := SanitizeToken(tok)
 			if sanitizedToken == "" {
 				continue
@@ -95,7 +97,6 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 		}
 		sentenceTF = result
 	}
-
 	close(stream)
 	for {
 		err, more := <-errors
@@ -116,8 +117,8 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 	res.Tfidf = &app.Titleabstractpredictmedia{
 		Class:      getClass(class),
 		Confidence: p,
-		Abstract:   abstract,
-		Title:      title,
+		Abstract:   article.Abstract,
+		Title:      article.Title,
 	}
 	if docuCount > 0 {
 		class, p = model.Probability(sentenceTF)
@@ -126,11 +127,11 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 	res.Tf = &app.Titleabstractpredictmedia{
 		Class:      getClass(class),
 		Confidence: p,
-		Title:      title,
-		Abstract:   abstract,
+		Abstract:   article.Abstract,
+		Title:      article.Title,
 	}
 
-	for _, sentence := range doc.Sentences() {
+	for _, sentence := range doc.Sentences {
 		if docuCount > 0 {
 			class, p = model.Probability(sentence.Text)
 		}
@@ -145,7 +146,7 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 	}
 	// nolint: govet
 	tf := text.TFIDF(*model)
-	frequencies := tf.MostImportantWords(abstract, 10)
+	frequencies := tf.MostImportantWords(article.Abstract, 10)
 	for _, freq := range frequencies {
 		res.MostImportantWords = append(res.MostImportantWords, &app.Mostimportantwordsmedia{
 			Frequency: freq.Frequency,
@@ -156,9 +157,9 @@ func GetScreeningMediaForProject(projectID uuid.UUID, title, abstract string) (*
 	return res, nil
 }
 
-func TF(doc *prose.Document, n int) text.Frequencies {
+func TF(doc *models.ScreeningData, n int) text.Frequencies {
 	tfinput := []string{}
-	for _, tok := range doc.Tokens() {
+	for _, tok := range doc.Tokens {
 		sanitizedToken := SanitizeToken(tok)
 		if sanitizedToken != "" {
 			tfinput = append(tfinput, sanitizedToken)
@@ -176,19 +177,32 @@ func TF(doc *prose.Document, n int) text.Frequencies {
 	return freq[:n]
 }
 
-func SentenceForTFIDF(model *text.NaiveBayes, total string, doc *prose.Document) string {
+func SentenceForTFIDF(model *text.NaiveBayes, total string, doc *models.ScreeningData) string {
 	// Calc TFIDF
 	// nolint: govet
 	tf := text.TFIDF(*model)
 	result := ""
+	temp := AmountImportantWords
 	// Retrieve 11 most important words
-	frequencies := tf.MostImportantWords(total, AmountImportantWords)
+	frequencies := tf.MostImportantWords(total, temp)
+	if frequencies[len(frequencies)-1].TFIDF == frequencies[len(frequencies)-2].TFIDF {
+		mem := frequencies[len(frequencies)-1].TFIDF
+		for frequencies[len(frequencies)-1].TFIDF == mem {
+			temp--
+
+			if temp == 0 {
+				return total
+			}
+			frequencies = tf.MostImportantWords(total, temp)
+
+		}
+	}
 	tfIDFWords := make(map[string]bool)
 	for _, x := range frequencies {
 		tfIDFWords[x.Word] = true
 	}
 	// Create sentence only of words occuring in idf set
-	for _, tok := range doc.Tokens() {
+	for _, tok := range doc.Tokens {
 		sanitizedToken := SanitizeToken(tok)
 		if sanitizedToken == "" {
 			continue
@@ -201,27 +215,31 @@ func SentenceForTFIDF(model *text.NaiveBayes, total string, doc *prose.Document)
 }
 
 // TrainModel trains the model
-func TrainModel(projectID uuid.UUID, abstract, title string, include bool) error {
-	trainingSentence, _ := getSanitizedText(title, abstract)
+func TrainModel(projectID uuid.UUID, article *models.Article, screenAbstract, include bool) error {
+	trainingSentence, doc, err := getSanitizedText(article, screenAbstract)
+	if err != nil {
+		return err
+	}
 
 	stream := make(chan base.TextDatapoint, 100)
 	errors := make(chan error)
 	model := text.NewNaiveBayes(stream, 2, base.OnlyWordsAndNumbers)
 	model.Output = ioutil.Discard
 	go model.OnlineLearn(errors)
-
-	err := model.RestoreFromFile("screening-models/" + projectID.String())
+	sentenceTFIDF := trainingSentence
+	err = model.RestoreFromFile("screening-models/" + projectID.String())
 	if err != nil {
 		log.Info("no model yet")
+	} else {
+		sentenceTFIDF = SentenceForTFIDF(model, trainingSentence, doc)
 	}
-
 	identifier := ClassTypeExclude
 	if include {
 		identifier = ClassTypeInclude
 	}
 
 	stream <- base.TextDatapoint{
-		X: strings.Trim(trainingSentence, ""),
+		X: strings.Trim(sentenceTFIDF, ""),
 		Y: uint8(identifier),
 	}
 
@@ -243,12 +261,22 @@ func TrainModel(projectID uuid.UUID, abstract, title string, include bool) error
 	return nil
 }
 
-func getSanitizedText(title, abstract string) (string, *prose.Document) {
-	result, doc, err := SanitizeText(abstract + " " + title)
-	if err != nil {
-		panic(err)
+func getSanitizedText(article *models.Article, abstractScreen bool) (string, *models.ScreeningData, error) {
+	var doc *models.ScreeningData
+	var err error
+	if abstractScreen {
+		doc, err = article.GetAbstractDoc()
+		if err != nil {
+			return "", nil, err
+		}
+	} else {
+		doc, err = article.GetFullTextDoc()
+		if err != nil {
+			return "", nil, err
+		}
 	}
-	return result, doc
+	result := SanitizeText(doc)
+	return result, doc, nil
 }
 
 func getClass(class uint8) string {
@@ -263,20 +291,15 @@ func getClass(class uint8) string {
 }
 
 // SanitizeText sanitizes text for training and screening
-func SanitizeText(text string) (string, *prose.Document, error) {
-	text = strings.ReplaceAll(text, "...", "")
-	doc, err := prose.NewDocument(text)
-	if err != nil {
-		return "", nil, err
-	}
+func SanitizeText(doc *models.ScreeningData) string {
 	res := ""
-	for _, tok := range doc.Tokens() {
+	for _, tok := range doc.Tokens {
 		sanitized := SanitizeToken(tok)
 		if sanitized != "" {
 			res += sanitized + " "
 		}
 	}
-	return res, doc, nil
+	return res
 }
 
 func SanitizeToken(tok prose.Token) string {
@@ -295,34 +318,4 @@ func SanitizeToken(tok prose.Token) string {
 	}
 	stem := porterstemmer.StemString(tok.Text)
 	return stem
-}
-
-var screeningChan chan (uuid.UUID)
-
-func autoScreenAbstract() {
-	for {
-		projectID := <-screeningChan
-		articles, err := DB.ArticleDB.ListOnStatus(context.Background(), projectID, models.ArticleStatusUnprocessed)
-		if err != nil {
-			log.Errorf("Err listing: %s", err)
-			continue
-		}
-		for _, article := range articles {
-			if article.Title == "" || article.Abstract == "" {
-				continue
-			}
-			res, err := GetScreeningMediaForProject(projectID, article.Title, article.Abstract)
-			if err != nil {
-				log.Errorf("Err predicting: %s", err)
-			}
-			article.Status = models.ArticleStatusExcluded
-			if res.Tfidf.Class == "Exclude" {
-				article.Status = models.ArticleStatusIncludedOnAbstract
-			}
-			err = DB.ArticleDB.Update(context.Background(), article)
-			if err != nil {
-				log.Errorf("Unable to update article status: %s", err)
-			}
-		}
-	}
 }

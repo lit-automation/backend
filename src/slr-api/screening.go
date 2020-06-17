@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/goadesign/goa"
 	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
@@ -22,22 +23,39 @@ func NewScreeningController(service *goa.Service) *ScreeningController {
 // Auto runs the auto action.
 func (c *ScreeningController) Auto(ctx *app.AutoScreeningContext) error {
 	// ScreeningController_Auto: start_implement
-
-	err := VerifyModel(ctx.ProjectID)
+	projectID, err := ProjectIDFromContext(ctx, ctx.ProjectID)
+	if err != nil {
+		return err
+	}
+	err = VerifyModel(projectID)
 	if err != nil {
 		return ErrBadRequest(err)
 	}
 
-	screeningChan <- ctx.ProjectID
-	articles, err := DB.ArticleDB.ListOnStatus(context.Background(), ctx.ProjectID, models.ArticleStatusUnprocessed)
+	articles, err := DB.ArticleDB.ListOnStatus(context.Background(), projectID, models.ArticleStatusUnprocessed)
 	if err != nil {
-		log.Errorf("Err listing: %s", err)
+		log.Errorf("unable to list articles for screening: %s", err)
+		return ctx.InternalServerError()
 	}
-	result := fmt.Sprintf("Screening will take approximatly %d seconds", len(articles)/3)
+	for _, article := range articles {
+		if !article.Preprocessed {
+			continue
+		}
+		res, err := GetScreeningMediaForProject(projectID, article, true)
+		if err != nil {
+			log.Errorf("Err predicting: %s", err)
+		}
+		article.Status = models.ArticleStatusIncludedOnAbstract
+		if res.Tfidf.Class == "Exclude" {
+			article.Status = models.ArticleStatusExcluded
+		}
+		err = DB.ArticleDB.Update(context.Background(), article)
+		if err != nil {
+			log.Errorf("Unable to update article status: %s", err)
+		}
+	}
 
-	res := &app.Autoscreenabstract{
-		Message: result,
-	}
+	res := &app.Autoscreenabstract{}
 	return ctx.OK(res)
 
 	// ScreeningController_Auto: end_implement
@@ -55,13 +73,16 @@ func (c *ScreeningController) Show(ctx *app.ShowScreeningContext) error {
 	if err != nil {
 		return ErrBadRequest(fmt.Errorf("Article not found"))
 	}
+	if !article.Preprocessed {
+		return ErrBadRequest(fmt.Errorf("Article is not yet pre processed for screening, if you just imported your articles give the backend some time to process"))
+	}
 	if article.ProjectID != projectID {
 		return ctx.BadRequest(fmt.Errorf("Incorrect article ID"))
 	}
 	if article.Title == "" || article.Abstract == "" {
 		return ErrBadRequest("Both title and abstract needs to be present before screening of articles")
 	}
-	res, err := GetScreeningMediaForProject(projectID, article.Title, article.Abstract)
+	res, err := GetScreeningMediaForProject(projectID, article, true)
 	if err != nil {
 		log.WithError(err).Error("unable to retrieve screening media")
 		return ctx.InternalServerError()
@@ -84,13 +105,16 @@ func (c *ScreeningController) Update(ctx *app.UpdateScreeningContext) error {
 	if err != nil {
 		return ErrBadRequest(fmt.Errorf("Article not found"))
 	}
+	if !article.Preprocessed {
+		return ErrBadRequest(fmt.Errorf("Article is not yet pre processed for screening, if you just imported your articles give the backend some time to process"))
+	}
 	if article.ProjectID != projectID {
 		return ctx.NotFound()
 	}
 	if article.Status != models.ArticleStatusUnprocessed {
 		return ErrBadRequest(fmt.Errorf("This article is not unprocessed and therefore can't be used to train the model"))
 	}
-	err = TrainModel(ctx.ProjectID, article.Title, article.Abstract, ctx.Payload.Include)
+	err = TrainModel(ctx.ProjectID, article, true, ctx.Payload.Include)
 	if err != nil {
 		return ctx.InternalServerError()
 	}
