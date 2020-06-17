@@ -235,7 +235,6 @@ func (c *ProjectController) RemoveDuplicates(ctx *app.RemoveDuplicatesProjectCon
 		log.WithError(err).WithField(logfields.ProjectID, ctx.ProjectID).Error("unable to list articles for project")
 		return ctx.InternalServerError()
 	}
-	// Put your logic here
 	for _, article := range articles {
 		if article.Doi == "" {
 			continue

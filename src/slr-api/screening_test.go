@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	currentSet = "article_set_large_loggin_100_unbalanced"
+	currentSet = "article_set_large_rl_personalization_100_unbalanced"
 )
 
 var (
@@ -208,8 +208,8 @@ func (s *ScreenTestSuite) prepareTestData(testData []TestArticle) []TestArticle 
 	return testData
 }
 
-func (s *ScreenTestSuite) TestActiveLearningAttempt2() {
-	toTrainSet := []int{1, 27}
+func (s *ScreenTestSuite) TestActiveLearningPerDocument() {
+	toTrainSet := []int{1}
 
 	fileName := currentSet
 	file, err := ioutil.ReadFile("testdata/" + fileName + ".json")

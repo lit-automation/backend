@@ -594,6 +594,7 @@ type ScreeningController interface {
 	goa.Muxer
 	Auto(*AutoScreeningContext) error
 	Show(*ShowScreeningContext) error
+	Shownext(*ShownextScreeningContext) error
 	Update(*UpdateScreeningContext) error
 }
 
@@ -603,6 +604,7 @@ func MountScreeningController(service *goa.Service, ctrl ScreeningController) {
 	var h goa.Handler
 	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/screen/auto", ctrl.MuxHandler("preflight", handleScreeningOrigin(cors.HandlePreflight()), nil))
 	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/screen/:articleID", ctrl.MuxHandler("preflight", handleScreeningOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/screen/activelearning/:type", ctrl.MuxHandler("preflight", handleScreeningOrigin(cors.HandlePreflight()), nil))
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request
@@ -637,6 +639,23 @@ func MountScreeningController(service *goa.Service, ctrl ScreeningController) {
 	h = handleScreeningOrigin(h)
 	service.Mux.Handle("GET", "/v1/project/:projectID/screen/:articleID", ctrl.MuxHandler("show", h, nil))
 	service.LogInfo("mount", "ctrl", "Screening", "action", "Show", "route", "GET /v1/project/:projectID/screen/:articleID", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewShownextScreeningContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Shownext(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleScreeningOrigin(h)
+	service.Mux.Handle("GET", "/v1/project/:projectID/screen/activelearning/:type", ctrl.MuxHandler("shownext", h, nil))
+	service.LogInfo("mount", "ctrl", "Screening", "action", "Shownext", "route", "GET /v1/project/:projectID/screen/activelearning/:type", "security", "jwt")
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request

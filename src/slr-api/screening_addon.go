@@ -74,7 +74,11 @@ func GetScreeningMediaForProject(projectID uuid.UUID, article *models.Article, a
 	go model.OnlineLearn(errors)
 	sentenceTFIDF := ""
 	sentenceTF := ""
-	err = model.RestoreFromFile("screening-models/" + projectID.String())
+	fullTextPrefix := ""
+	if !abstractScreen {
+		fullTextPrefix = "full_text"
+	}
+	err = model.RestoreFromFile("screening-models/" + fullTextPrefix + projectID.String())
 	if err != nil {
 		log.Info("no model yet")
 	} else {
@@ -122,7 +126,6 @@ func GetScreeningMediaForProject(projectID uuid.UUID, article *models.Article, a
 	}
 	if docuCount > 0 {
 		class, p = model.Probability(sentenceTF)
-
 	}
 	res.Tf = &app.Titleabstractpredictmedia{
 		Class:      getClass(class),

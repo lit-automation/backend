@@ -50,6 +50,7 @@ func (m *Article) ArticleToArticle() *app.Article {
 	article.CitedAmount = &m.CitedAmount
 	article.Comment = &m.Comment
 	article.Doi = &m.Doi
+	article.FullText = &m.FullText
 	article.GotPdf = &m.GotPdf
 	article.ID = m.ID
 	article.Journal = &m.Journal

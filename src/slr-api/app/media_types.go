@@ -24,6 +24,7 @@ type Article struct {
 	CitedAmount        *int       `form:"cited_amount,omitempty" json:"cited_amount,omitempty" yaml:"cited_amount,omitempty" xml:"cited_amount,omitempty"`
 	Comment            *string    `form:"comment,omitempty" json:"comment,omitempty" yaml:"comment,omitempty" xml:"comment,omitempty"`
 	Doi                *string    `form:"doi,omitempty" json:"doi,omitempty" yaml:"doi,omitempty" xml:"doi,omitempty"`
+	FullText           *string    `form:"full_text,omitempty" json:"full_text,omitempty" yaml:"full_text,omitempty" xml:"full_text,omitempty"`
 	GotPdf             *bool      `form:"got_pdf,omitempty" json:"got_pdf,omitempty" yaml:"got_pdf,omitempty" xml:"got_pdf,omitempty"`
 	ID                 uuid.UUID  `form:"id" json:"id" yaml:"id" xml:"id"`
 	Journal            *string    `form:"journal,omitempty" json:"journal,omitempty" yaml:"journal,omitempty" xml:"journal,omitempty"`

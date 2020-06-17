@@ -280,6 +280,18 @@ var _ = Resource("screening", func() {
 		Response(InternalServerError)
 		Response(BadRequest, ErrorMedia)
 	})
+	Action("shownext", func() {
+		Routing(
+			GET("/activelearning/:type"),
+		)
+		Params(func() {
+			Param("type", String)
+		})
+		Description("Show article screening")
+		Response(OK)
+		Response(InternalServerError)
+		Response(BadRequest, ErrorMedia)
+	})
 	Action("update", func() {
 		Routing(
 			PUT("/:articleID"),

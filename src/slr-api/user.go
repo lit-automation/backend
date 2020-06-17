@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/goadesign/goa"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
@@ -25,7 +26,6 @@ func NewUserController(service *goa.Service) *UserController {
 func (c *UserController) Create(ctx *app.CreateUserContext) error {
 	// UserController_Create: start_implement
 
-	// Put your logic here
 	passWordHash, err := bcrypt.GenerateFromPassword([]byte(ctx.Payload.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.WithError(err).Error("unable to hash password")

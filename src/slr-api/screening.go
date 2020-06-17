@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/goadesign/goa"
 	log "github.com/sirupsen/logrus"
@@ -23,6 +24,7 @@ func NewScreeningController(service *goa.Service) *ScreeningController {
 // Auto runs the auto action.
 func (c *ScreeningController) Auto(ctx *app.AutoScreeningContext) error {
 	// ScreeningController_Auto: start_implement
+
 	projectID, err := ProjectIDFromContext(ctx, ctx.ProjectID)
 	if err != nil {
 		return err
@@ -91,6 +93,47 @@ func (c *ScreeningController) Show(ctx *app.ShowScreeningContext) error {
 	return ctx.OK(res)
 
 	// ScreeningController_Show: end_implement
+}
+
+// Shownext runs the shownext action.
+func (c *ScreeningController) Shownext(ctx *app.ShownextScreeningContext) error {
+	// ScreeningController_Shownext: start_implement
+
+	projectID, err := ProjectIDFromContext(ctx, ctx.ProjectID)
+	if err != nil {
+		return err
+	}
+	articles, err := DB.ArticleDB.ListOnStatus(context.Background(), projectID, models.ArticleStatusUnprocessed)
+	if err != nil {
+		log.Errorf("unable to list articles for screening: %s", err)
+		return ctx.InternalServerError()
+	}
+	if len(articles) == 0 {
+		return ctx.BadRequest(fmt.Errorf("No articles found for screening"))
+	}
+	screeningResult := []*app.Articlescreening{}
+	for _, article := range articles {
+		if !article.Preprocessed {
+			continue
+		}
+		res, err := GetScreeningMediaForProject(projectID, article, true)
+		if err != nil {
+			log.Errorf("Err predicting: %s", err)
+		}
+		screeningResult = append(screeningResult, res)
+	}
+
+	sort.Slice(screeningResult, func(i, j int) bool {
+		return screeningResult[i].Tfidf.Confidence < screeningResult[j].Tfidf.Confidence
+	})
+	for _, result := range screeningResult {
+		if result.Tfidf.Abstract != "" {
+			return ctx.OK(result)
+		}
+	}
+	return ctx.OK(screeningResult[0])
+
+	// ScreeningController_Shownext: end_implement
 }
 
 // Update runs the update action.
