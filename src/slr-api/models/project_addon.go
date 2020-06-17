@@ -21,6 +21,7 @@ const (
 type ScrapeState struct {
 	Status          ScrapeStatus `json:"status"`
 	Platforms       []Platform   `json:"platforms"`
+	URLs            []string     `json:"urls"`
 	ProcessingIndex int64        `json:"processing_index"`
 	PlatformCounter int64        `json:"platform_counter"`
 	NextURL         string       `json:"next_url"`

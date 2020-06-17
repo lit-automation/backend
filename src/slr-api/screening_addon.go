@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	AmountImportantWords int = 11
+	AmountImportantWords int = 12
 )
 
 type ClassType int

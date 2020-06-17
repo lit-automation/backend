@@ -24,7 +24,7 @@ const (
 )
 
 var (
-	screeningTestSetSizes = []int{4, 6, 8, 10, 20, 30, 40, 50, 75, 90}
+	screeningTestSetSizes = []int{6, 8, 10, 20, 30, 40, 50, 75, 90}
 )
 
 // TestArticle result for training and verifying our model
@@ -208,6 +208,40 @@ func (s *ScreenTestSuite) prepareTestData(testData []TestArticle) []TestArticle 
 	return testData
 }
 
+func (s *ScreenTestSuite) TestActiveLearningAttempt2() {
+	toTrainSet := []int{1, 27}
+
+	fileName := currentSet
+	file, err := ioutil.ReadFile("testdata/" + fileName + ".json")
+	s.Require().NoError(err)
+	testData := []TestArticle{}
+	err = json.Unmarshal([]byte(file), &testData)
+	s.Require().NoError(err)
+	testData = s.prepareTestData(testData)
+	modelID := uuid.Must(uuid.NewV4())
+	trainedSet := []int{}
+	resultMapTF := make(map[int][]*AccuracyScore)
+	resultMapTFIDF := make(map[int][]*AccuracyScore)
+	for len(trainedSet) < 90 {
+		for i := range toTrainSet {
+			index := toTrainSet[i]
+			trainedSet = append(trainedSet, index)
+			err := TrainModel(modelID, testData[index].Article, true, testData[index].Include)
+			s.Require().NoError(err)
+		}
+		fmt.Println(len(trainedSet))
+		result := s.predictActiveSet(testData, trainedSet, modelID, resultMapTF, resultMapTFIDF)
+
+		sort.Slice(result, func(i, j int) bool {
+			return result[i].Confidence < result[j].Confidence
+		})
+		toTrainSet = []int{}
+		toTrainSet = append(toTrainSet, result[0].Index)
+	}
+	s.writeMapToDisk(fileName+"tf.json", resultMapTF)
+	s.writeMapToDisk(fileName+"tfidf.json", resultMapTFIDF)
+}
+
 func (s *ScreenTestSuite) TestActiveLearning() {
 	fileName := currentSet
 	file, err := ioutil.ReadFile("testdata/" + fileName + ".json")
@@ -220,7 +254,7 @@ func (s *ScreenTestSuite) TestActiveLearning() {
 	modelID := uuid.Must(uuid.NewV4())
 	trainedSet := []int{}
 	// Init for test
-	toTrainSet := []int{1, 0}
+	toTrainSet := []int{7, 6, 4, 69}
 	resultMapTF := make(map[int][]*AccuracyScore)
 	resultMapTFIDF := make(map[int][]*AccuracyScore)
 	for _, x := range trainingAmounts {
@@ -237,6 +271,11 @@ func (s *ScreenTestSuite) TestActiveLearning() {
 			return result[i].Confidence < result[j].Confidence
 		})
 		toTrainSet = []int{}
+		for _, y := range result {
+			if y.Confidence == 0.5 {
+				fmt.Println(x, y.Confidence)
+			}
+		}
 		for j := 0; j < x-len(trainedSet); j++ {
 			toTrainSet = append(toTrainSet, result[j].Index)
 		}
