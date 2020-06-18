@@ -69,9 +69,9 @@ func (c *ProjectController) ProcessCSV(tx *gorm.DB, projectID uuid.UUID, input s
 			case "status":
 				status, err := strconv.Atoi(record[v])
 				if err == nil {
-					article.Status = models.ArticleStatusUnprocessed
-				} else {
 					article.Status = models.ArticleStatus(status)
+				} else {
+					article.Status = models.ArticleStatusUnprocessed
 				}
 			case "year":
 				year, err := strconv.Atoi(record[v])
