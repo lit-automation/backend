@@ -66,6 +66,13 @@ func (c *ProjectController) ProcessCSV(tx *gorm.DB, projectID uuid.UUID, input s
 				article.URL = record[v]
 			case "full_text":
 				article.FullText = record[v]
+			case "status":
+				status, err := strconv.Atoi(record[v])
+				if err == nil {
+					article.Status = models.ArticleStatusUnprocessed
+				} else {
+					article.Status = models.ArticleStatus(status)
+				}
 			case "year":
 				year, err := strconv.Atoi(record[v])
 				if err == nil {
@@ -103,6 +110,8 @@ func (c *ProjectController) VerifyFirstRow(elements []string) (map[string]int, e
 			columnMapper["doi"] = i
 		case "full_text":
 			columnMapper["full_text"] = i
+		case "status":
+			columnMapper["status"] = i
 		default:
 			return nil, fmt.Errorf("incorrect column name provided: %s", e)
 		}
