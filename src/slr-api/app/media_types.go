@@ -68,6 +68,7 @@ func (mt *Articlemetadata) Validate() (err error) {
 // Identifier: application/vnd.articlescreening+json; view=default
 type Articlescreening struct {
 	ID                 uuid.UUID                  `form:"id" json:"id" yaml:"id" xml:"id"`
+	ModelDetails       *Modeldetails              `form:"model_details" json:"model_details" yaml:"model_details" xml:"model_details"`
 	MostImportantWords []*Mostimportantwordsmedia `form:"most_important_words" json:"most_important_words" yaml:"most_important_words" xml:"most_important_words"`
 	Sentences          []*Textpredictmedia        `form:"sentences" json:"sentences" yaml:"sentences" xml:"sentences"`
 	Tf                 *Titleabstractpredictmedia `form:"tf" json:"tf" yaml:"tf" xml:"tf"`
@@ -88,6 +89,9 @@ func (mt *Articlescreening) Validate() (err error) {
 	}
 	if mt.MostImportantWords == nil {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "most_important_words"))
+	}
+	if mt.ModelDetails == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "model_details"))
 	}
 	for _, e := range mt.MostImportantWords {
 		if e != nil {
@@ -229,6 +233,22 @@ func (mt GraphmediaCollection) Validate() (err error) {
 type Health struct {
 	// True if API is healthy
 	Health bool `form:"health" json:"health" yaml:"health" xml:"health"`
+}
+
+// Modeldetails media type (default view)
+//
+// Identifier: application/vnd.modeldetails+json; view=default
+type Modeldetails struct {
+	AutoExclude      float64 `form:"auto_exclude" json:"auto_exclude" yaml:"auto_exclude" xml:"auto_exclude"`
+	AutoInclude      float64 `form:"auto_include" json:"auto_include" yaml:"auto_include" xml:"auto_include"`
+	ScreenedArticles float64 `form:"screened_articles" json:"screened_articles" yaml:"screened_articles" xml:"screened_articles"`
+	TotalArticles    float64 `form:"total_articles" json:"total_articles" yaml:"total_articles" xml:"total_articles"`
+}
+
+// Validate validates the Modeldetails media type instance.
+func (mt *Modeldetails) Validate() (err error) {
+
+	return
 }
 
 // Mostimportantwordsmedia media type (default view)

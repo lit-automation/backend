@@ -174,7 +174,8 @@ var ArticleScreeningMedia = MediaType("application/vnd.articlescreening+json", f
 		Attribute("tfidf", TitleAbstractPredictMedia)
 		Attribute("sentences", ArrayOf(TextPredictMedia))
 		Attribute("most_important_words", ArrayOf(MostImportantWordsMedia))
-		Required("id", "tf", "tfidf", "sentences", "most_important_words")
+		Attribute("model_details", ModelDetailsMedia)
+		Required("id", "tf", "tfidf", "sentences", "most_important_words", "model_details")
 	})
 	View("default", func() {
 		Attribute("id")
@@ -182,6 +183,23 @@ var ArticleScreeningMedia = MediaType("application/vnd.articlescreening+json", f
 		Attribute("tfidf")
 		Attribute("sentences")
 		Attribute("most_important_words")
+		Attribute("model_details")
+	})
+})
+
+var ModelDetailsMedia = MediaType("application/vnd.modeldetails+json", func() {
+	Attributes(func() {
+		Attribute("total_articles", Number)
+		Attribute("screened_articles", Number)
+		Attribute("auto_include", Number)
+		Attribute("auto_exclude", Number)
+		Required("total_articles", "screened_articles", "auto_include", "auto_exclude")
+	})
+	View("default", func() {
+		Attribute("total_articles")
+		Attribute("screened_articles")
+		Attribute("auto_include")
+		Attribute("auto_exclude")
 	})
 })
 

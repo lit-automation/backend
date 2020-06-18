@@ -229,6 +229,17 @@ func (m *ArticleDB) ListForProject(ctx context.Context, projectID uuid.UUID) ([]
 	return objs, nil
 }
 
+func (m *ArticleDB) CountOnStatusList(ctx context.Context, projectID uuid.UUID, statuses []ArticleStatus) (int, error) {
+	var count Count
+	err := m.Db.Table(m.TableName()).Where("project_id = ? AND status IN (?)", projectID, statuses).
+		Select("COUNT(id)").
+		Find(&count).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return 0, err
+	}
+	return count.Count, nil
+}
+
 // ListNonDuplicatesForProject returns an array of Article
 func (m *ArticleDB) ListNonDuplicatesForProject(ctx context.Context, projectID uuid.UUID) ([]*Article, error) {
 	defer goa.MeasureSince([]string{"goa", "db", "article", "list"}, time.Now())

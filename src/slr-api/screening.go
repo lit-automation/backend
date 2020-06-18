@@ -81,9 +81,6 @@ func (c *ScreeningController) Show(ctx *app.ShowScreeningContext) error {
 	if article.ProjectID != projectID {
 		return ctx.BadRequest(fmt.Errorf("Incorrect article ID"))
 	}
-	if article.Title == "" || article.Abstract == "" {
-		return ErrBadRequest("Both title and abstract needs to be present before screening of articles")
-	}
 	res, err := GetScreeningMediaForProject(projectID, article, true)
 	if err != nil {
 		log.WithError(err).Error("unable to retrieve screening media")
@@ -120,17 +117,45 @@ func (c *ScreeningController) Shownext(ctx *app.ShownextScreeningContext) error 
 		if err != nil {
 			log.Errorf("Err predicting: %s", err)
 		}
+
+		res.ID = article.ID
 		screeningResult = append(screeningResult, res)
 	}
 
 	sort.Slice(screeningResult, func(i, j int) bool {
 		return screeningResult[i].Tfidf.Confidence < screeningResult[j].Tfidf.Confidence
 	})
+	counterInc := 0
+	counterEx := 0
+	for _, temp := range screeningResult {
+		if temp.Tfidf.Class == "Include" {
+			counterInc++
+		} else {
+			counterEx++
+		}
+	}
+	totalArticles, err := DB.ArticleDB.CountOnStatusList(ctx, projectID, []models.ArticleStatus{models.ArticleStatusExcluded, models.ArticleStatusIncluded, models.ArticleStatusIncludedOnAbstract, models.ArticleStatusUnprocessed, models.ArticleStatusUnknown})
+	if err != nil {
+		log.Errorf("unable to retrieve total amount of articles: %s", err)
+	}
+	screenedArticles, err := DB.ArticleDB.CountOnStatusList(ctx, projectID, []models.ArticleStatus{models.ArticleStatusExcluded, models.ArticleStatusIncluded, models.ArticleStatusIncludedOnAbstract})
+	if err != nil {
+		log.Errorf("unable to retrieve amount of articles screened: %s", err)
+	}
+	modelDetails := &app.Modeldetails{
+		AutoExclude:      float64(counterEx),
+		AutoInclude:      float64(counterInc),
+		ScreenedArticles: float64(screenedArticles),
+		TotalArticles:    float64(totalArticles),
+	}
+	fmt.Println("Current situation:", counterInc, counterEx)
 	for _, result := range screeningResult {
 		if result.Tfidf.Abstract != "" {
+			result.ModelDetails = modelDetails
 			return ctx.OK(result)
 		}
 	}
+	screeningResult[0].ModelDetails = modelDetails
 	return ctx.OK(screeningResult[0])
 
 	// ScreeningController_Shownext: end_implement
@@ -165,6 +190,7 @@ func (c *ScreeningController) Update(ctx *app.UpdateScreeningContext) error {
 	if ctx.Payload.Include {
 		article.Status = models.ArticleStatusIncludedOnAbstract
 	}
+	fmt.Println("Updating article: ", article.Status)
 	err = DB.ArticleDB.Update(ctx, article)
 	if err != nil {
 		return ctx.InternalServerError()

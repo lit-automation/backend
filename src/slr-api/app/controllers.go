@@ -32,189 +32,6 @@ func initService(service *goa.Service) {
 	service.Decoder.Register(goa.NewJSONDecoder, "*/*")
 }
 
-// ArticleController is the controller interface for the Article actions.
-type ArticleController interface {
-	goa.Muxer
-	Create(*CreateArticleContext) error
-	Delete(*DeleteArticleContext) error
-	Download(*DownloadArticleContext) error
-	List(*ListArticleContext) error
-	Snowball(*SnowballArticleContext) error
-	Update(*UpdateArticleContext) error
-}
-
-// MountArticleController "mounts" a Article resource controller on the given service.
-func MountArticleController(service *goa.Service, ctrl ArticleController) {
-	initService(service)
-	var h goa.Handler
-	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/article", ctrl.MuxHandler("preflight", handleArticleOrigin(cors.HandlePreflight()), nil))
-	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/article/:articleID", ctrl.MuxHandler("preflight", handleArticleOrigin(cors.HandlePreflight()), nil))
-	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/article/download", ctrl.MuxHandler("preflight", handleArticleOrigin(cors.HandlePreflight()), nil))
-	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/article/list", ctrl.MuxHandler("preflight", handleArticleOrigin(cors.HandlePreflight()), nil))
-	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/article/snowball", ctrl.MuxHandler("preflight", handleArticleOrigin(cors.HandlePreflight()), nil))
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewCreateArticleContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		// Build the payload
-		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
-			rctx.Payload = rawPayload.(*CreateArticlePayload)
-		} else {
-			return goa.MissingPayloadError()
-		}
-		return ctrl.Create(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleArticleOrigin(h)
-	service.Mux.Handle("POST", "/v1/project/:projectID/article", ctrl.MuxHandler("create", h, unmarshalCreateArticlePayload))
-	service.LogInfo("mount", "ctrl", "Article", "action", "Create", "route", "POST /v1/project/:projectID/article", "security", "jwt")
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewDeleteArticleContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		return ctrl.Delete(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleArticleOrigin(h)
-	service.Mux.Handle("DELETE", "/v1/project/:projectID/article/:articleID", ctrl.MuxHandler("delete", h, nil))
-	service.LogInfo("mount", "ctrl", "Article", "action", "Delete", "route", "DELETE /v1/project/:projectID/article/:articleID", "security", "jwt")
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewDownloadArticleContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		return ctrl.Download(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleArticleOrigin(h)
-	service.Mux.Handle("GET", "/v1/project/:projectID/article/download", ctrl.MuxHandler("download", h, nil))
-	service.LogInfo("mount", "ctrl", "Article", "action", "Download", "route", "GET /v1/project/:projectID/article/download", "security", "jwt")
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewListArticleContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		return ctrl.List(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleArticleOrigin(h)
-	service.Mux.Handle("GET", "/v1/project/:projectID/article/list", ctrl.MuxHandler("list", h, nil))
-	service.LogInfo("mount", "ctrl", "Article", "action", "List", "route", "GET /v1/project/:projectID/article/list", "security", "jwt")
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewSnowballArticleContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		return ctrl.Snowball(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleArticleOrigin(h)
-	service.Mux.Handle("GET", "/v1/project/:projectID/article/snowball", ctrl.MuxHandler("snowball", h, nil))
-	service.LogInfo("mount", "ctrl", "Article", "action", "Snowball", "route", "GET /v1/project/:projectID/article/snowball", "security", "jwt")
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewUpdateArticleContext(ctx, req, service)
-		if err != nil {
-			return err
-		}
-		// Build the payload
-		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
-			rctx.Payload = rawPayload.(*UpdateArticlePayload)
-		} else {
-			return goa.MissingPayloadError()
-		}
-		return ctrl.Update(rctx)
-	}
-	h = handleSecurity("jwt", h, "api:access")
-	h = handleArticleOrigin(h)
-	service.Mux.Handle("PUT", "/v1/project/:projectID/article/:articleID", ctrl.MuxHandler("update", h, unmarshalUpdateArticlePayload))
-	service.LogInfo("mount", "ctrl", "Article", "action", "Update", "route", "PUT /v1/project/:projectID/article/:articleID", "security", "jwt")
-}
-
-// handleArticleOrigin applies the CORS response headers corresponding to the origin.
-func handleArticleOrigin(h goa.Handler) goa.Handler {
-
-	return func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		origin := req.Header.Get("Origin")
-		if origin == "" {
-			// Not a CORS request
-			return h(ctx, rw, req)
-		}
-		if cors.MatchOrigin(origin, "*") {
-			ctx = goa.WithLogContext(ctx, "origin", origin)
-			rw.Header().Set("Access-Control-Allow-Origin", origin)
-			rw.Header().Set("Access-Control-Expose-Headers", "X-List-Count")
-			rw.Header().Set("Access-Control-Max-Age", "600")
-			rw.Header().Set("Access-Control-Allow-Credentials", "true")
-			if acrm := req.Header.Get("Access-Control-Request-Method"); acrm != "" {
-				// We are handling a preflight request
-				rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-				rw.Header().Set("Access-Control-Allow-Headers", "Authorization, X-Pin, X-Platform, content-type, X-Vendor-id, x-list-limit, x-list-page, x-list-filter, X-List-Count, Access-Control-Allow-Origin, accept")
-			}
-			return h(ctx, rw, req)
-		}
-
-		return h(ctx, rw, req)
-	}
-}
-
-// unmarshalCreateArticlePayload unmarshals the request body into the context request data Payload field.
-func unmarshalCreateArticlePayload(ctx context.Context, service *goa.Service, req *http.Request) error {
-	payload := &createArticlePayload{}
-	if err := service.DecodeRequest(req, payload); err != nil {
-		return err
-	}
-	goa.ContextRequest(ctx).Payload = payload.Publicize()
-	return nil
-}
-
-// unmarshalUpdateArticlePayload unmarshals the request body into the context request data Payload field.
-func unmarshalUpdateArticlePayload(ctx context.Context, service *goa.Service, req *http.Request) error {
-	payload := &updateArticlePayload{}
-	if err := service.DecodeRequest(req, payload); err != nil {
-		return err
-	}
-	goa.ContextRequest(ctx).Payload = payload.Publicize()
-	return nil
-}
-
 // HealthController is the controller interface for the Health actions.
 type HealthController interface {
 	goa.Muxer
@@ -582,6 +399,189 @@ func unmarshalCreateFromCSVProjectPayload(ctx context.Context, service *goa.Serv
 // unmarshalUpdateProjectPayload unmarshals the request body into the context request data Payload field.
 func unmarshalUpdateProjectPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
 	payload := &updateProjectPayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
+}
+
+// ArticleController is the controller interface for the Article actions.
+type ArticleController interface {
+	goa.Muxer
+	Create(*CreateArticleContext) error
+	Delete(*DeleteArticleContext) error
+	Download(*DownloadArticleContext) error
+	List(*ListArticleContext) error
+	Snowball(*SnowballArticleContext) error
+	Update(*UpdateArticleContext) error
+}
+
+// MountArticleController "mounts" a Article resource controller on the given service.
+func MountArticleController(service *goa.Service, ctrl ArticleController) {
+	initService(service)
+	var h goa.Handler
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/article", ctrl.MuxHandler("preflight", handleArticleOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/article/:articleID", ctrl.MuxHandler("preflight", handleArticleOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/article/download", ctrl.MuxHandler("preflight", handleArticleOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/article/list", ctrl.MuxHandler("preflight", handleArticleOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/article/snowball", ctrl.MuxHandler("preflight", handleArticleOrigin(cors.HandlePreflight()), nil))
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewCreateArticleContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*CreateArticlePayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.Create(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleArticleOrigin(h)
+	service.Mux.Handle("POST", "/v1/project/:projectID/article", ctrl.MuxHandler("create", h, unmarshalCreateArticlePayload))
+	service.LogInfo("mount", "ctrl", "Article", "action", "Create", "route", "POST /v1/project/:projectID/article", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewDeleteArticleContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Delete(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleArticleOrigin(h)
+	service.Mux.Handle("DELETE", "/v1/project/:projectID/article/:articleID", ctrl.MuxHandler("delete", h, nil))
+	service.LogInfo("mount", "ctrl", "Article", "action", "Delete", "route", "DELETE /v1/project/:projectID/article/:articleID", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewDownloadArticleContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Download(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleArticleOrigin(h)
+	service.Mux.Handle("GET", "/v1/project/:projectID/article/download", ctrl.MuxHandler("download", h, nil))
+	service.LogInfo("mount", "ctrl", "Article", "action", "Download", "route", "GET /v1/project/:projectID/article/download", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewListArticleContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.List(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleArticleOrigin(h)
+	service.Mux.Handle("GET", "/v1/project/:projectID/article/list", ctrl.MuxHandler("list", h, nil))
+	service.LogInfo("mount", "ctrl", "Article", "action", "List", "route", "GET /v1/project/:projectID/article/list", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewSnowballArticleContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Snowball(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleArticleOrigin(h)
+	service.Mux.Handle("GET", "/v1/project/:projectID/article/snowball", ctrl.MuxHandler("snowball", h, nil))
+	service.LogInfo("mount", "ctrl", "Article", "action", "Snowball", "route", "GET /v1/project/:projectID/article/snowball", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewUpdateArticleContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*UpdateArticlePayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.Update(rctx)
+	}
+	h = handleSecurity("jwt", h, "api:access")
+	h = handleArticleOrigin(h)
+	service.Mux.Handle("PUT", "/v1/project/:projectID/article/:articleID", ctrl.MuxHandler("update", h, unmarshalUpdateArticlePayload))
+	service.LogInfo("mount", "ctrl", "Article", "action", "Update", "route", "PUT /v1/project/:projectID/article/:articleID", "security", "jwt")
+}
+
+// handleArticleOrigin applies the CORS response headers corresponding to the origin.
+func handleArticleOrigin(h goa.Handler) goa.Handler {
+
+	return func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		origin := req.Header.Get("Origin")
+		if origin == "" {
+			// Not a CORS request
+			return h(ctx, rw, req)
+		}
+		if cors.MatchOrigin(origin, "*") {
+			ctx = goa.WithLogContext(ctx, "origin", origin)
+			rw.Header().Set("Access-Control-Allow-Origin", origin)
+			rw.Header().Set("Access-Control-Expose-Headers", "X-List-Count")
+			rw.Header().Set("Access-Control-Max-Age", "600")
+			rw.Header().Set("Access-Control-Allow-Credentials", "true")
+			if acrm := req.Header.Get("Access-Control-Request-Method"); acrm != "" {
+				// We are handling a preflight request
+				rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+				rw.Header().Set("Access-Control-Allow-Headers", "Authorization, X-Pin, X-Platform, content-type, X-Vendor-id, x-list-limit, x-list-page, x-list-filter, X-List-Count, Access-Control-Allow-Origin, accept")
+			}
+			return h(ctx, rw, req)
+		}
+
+		return h(ctx, rw, req)
+	}
+}
+
+// unmarshalCreateArticlePayload unmarshals the request body into the context request data Payload field.
+func unmarshalCreateArticlePayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &createArticlePayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
+}
+
+// unmarshalUpdateArticlePayload unmarshals the request body into the context request data Payload field.
+func unmarshalUpdateArticlePayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &updateArticlePayload{}
 	if err := service.DecodeRequest(req, payload); err != nil {
 		return err
 	}
