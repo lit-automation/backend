@@ -229,7 +229,7 @@ func (c *ProjectController) List(ctx *app.ListProjectContext) error {
 func (c *ProjectController) RemoveDuplicates(ctx *app.RemoveDuplicatesProjectContext) error {
 	// ProjectController_RemoveDuplicates: start_implement
 
-	dois := make(map[string][]uuid.UUID)
+	dois := make(map[string][]*models.Article)
 	articles, err := DB.ArticleDB.ListNonDuplicatesForProject(ctx, ctx.ProjectID)
 	if err != nil {
 		log.WithError(err).WithField(logfields.ProjectID, ctx.ProjectID).Error("unable to list articles for project")
@@ -239,14 +239,23 @@ func (c *ProjectController) RemoveDuplicates(ctx *app.RemoveDuplicatesProjectCon
 		if article.Doi == "" {
 			continue
 		}
-		dois[article.Doi] = append(dois[article.Doi], article.ID)
+		dois[article.Doi] = append(dois[article.Doi], article)
 	}
 	toDuplicate := []uuid.UUID{}
 	for _, v := range dois {
 		if len(v) > 1 {
-			for i := 1; i < len(v); i++ {
-				toDuplicate = append(toDuplicate, v[i])
+			keepIndex := 0
+			for i := 0; i < len(v); i++ {
+				if v[i].Abstract != "" {
+					keepIndex = i
+				}
 			}
+			for i := 0; i < len(v); i++ {
+				if i != keepIndex {
+					toDuplicate = append(toDuplicate, v[i].ID)
+				}
+			}
+
 		}
 	}
 	err = DB.ArticleDB.SetDuplicates(ctx, toDuplicate)
@@ -260,18 +269,26 @@ func (c *ProjectController) RemoveDuplicates(ctx *app.RemoveDuplicatesProjectCon
 		return ctx.InternalServerError()
 	}
 
-	titles := make(map[string][]uuid.UUID)
+	titles := make(map[string][]*models.Article)
 	for _, article := range articles {
 		if article.Doi == "" {
 			continue
 		}
-		titles[article.Title] = append(titles[article.Title], article.ID)
+		titles[article.Title] = append(titles[article.Title], article)
 	}
 	toDuplicateTitles := []uuid.UUID{}
 	for _, v := range titles {
 		if len(v) > 1 {
-			for i := 1; i < len(v); i++ {
-				toDuplicateTitles = append(toDuplicateTitles, v[i])
+			keepIndex := 0
+			for i := 0; i < len(v); i++ {
+				if v[i].Abstract != "" {
+					keepIndex = i
+				}
+			}
+			for i := 0; i < len(v); i++ {
+				if i != keepIndex {
+					toDuplicateTitles = append(toDuplicateTitles, v[i].ID)
+				}
 			}
 		}
 	}
