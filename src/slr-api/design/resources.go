@@ -274,6 +274,7 @@ var _ = Resource("screening", func() {
 		)
 		Params(func() {
 			Param("articleID", UUID, "Article ID")
+			Param("type", String)
 		})
 		Description("Show article screening")
 		Response(OK)
@@ -298,6 +299,7 @@ var _ = Resource("screening", func() {
 		)
 		Params(func() {
 			Param("articleID", UUID, "Article ID")
+			Param("type", String)
 		})
 		Payload(func() {
 			Member("include", Boolean)
@@ -312,6 +314,9 @@ var _ = Resource("screening", func() {
 		Routing(
 			POST("auto"),
 		)
+		Params(func() {
+			Param("type", String)
+		})
 		Response(OK, func() {
 			Media(AutoScreenAbstract)
 		})

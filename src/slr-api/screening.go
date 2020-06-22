@@ -24,7 +24,6 @@ func NewScreeningController(service *goa.Service) *ScreeningController {
 // Auto runs the auto action.
 func (c *ScreeningController) Auto(ctx *app.AutoScreeningContext) error {
 	// ScreeningController_Auto: start_implement
-
 	projectID, err := ProjectIDFromContext(ctx, ctx.ProjectID)
 	if err != nil {
 		return err
@@ -39,15 +38,24 @@ func (c *ScreeningController) Auto(ctx *app.AutoScreeningContext) error {
 		log.Errorf("unable to list articles for screening: %s", err)
 		return ctx.InternalServerError()
 	}
+	screenAbstract := true
+	if ctx.Type != nil {
+		if *ctx.Type == "fulltext" {
+			screenAbstract = false
+		}
+	}
 	for _, article := range articles {
 		if !article.Preprocessed {
 			continue
 		}
-		res, err := GetScreeningMediaForProject(projectID, article, true)
+		res, err := GetScreeningMediaForProject(projectID, article, screenAbstract)
 		if err != nil {
 			log.Errorf("Err predicting: %s", err)
 		}
 		article.Status = models.ArticleStatusIncludedOnAbstract
+		if !screenAbstract {
+			article.Status = models.ArticleStatusIncluded
+		}
 		if res.Tfidf.Class == "Exclude" {
 			article.Status = models.ArticleStatusExcluded
 		}
@@ -81,7 +89,13 @@ func (c *ScreeningController) Show(ctx *app.ShowScreeningContext) error {
 	if article.ProjectID != projectID {
 		return ctx.BadRequest(fmt.Errorf("Incorrect article ID"))
 	}
-	res, err := GetScreeningMediaForProject(projectID, article, true)
+	screenAbstract := true
+	if ctx.Type != nil {
+		if *ctx.Type == "fulltext" {
+			screenAbstract = false
+		}
+	}
+	res, err := GetScreeningMediaForProject(projectID, article, screenAbstract)
 	if err != nil {
 		log.WithError(err).Error("unable to retrieve screening media")
 		return ctx.InternalServerError()
@@ -106,14 +120,18 @@ func (c *ScreeningController) Shownext(ctx *app.ShownextScreeningContext) error 
 		return ctx.InternalServerError()
 	}
 	if len(articles) == 0 {
-		return ctx.BadRequest(fmt.Errorf("No articles found for screening"))
+		return ErrBadRequest(fmt.Errorf("No articles found for screening"))
+	}
+	screenAbstract := true
+	if ctx.Type == "fulltext" {
+		screenAbstract = false
 	}
 	screeningResult := []*app.Articlescreening{}
 	for _, article := range articles {
 		if !article.Preprocessed {
 			continue
 		}
-		res, err := GetScreeningMediaForProject(projectID, article, true)
+		res, err := GetScreeningMediaForProject(projectID, article, screenAbstract)
 		if err != nil {
 			log.Errorf("Err predicting: %s", err)
 		}
@@ -182,13 +200,22 @@ func (c *ScreeningController) Update(ctx *app.UpdateScreeningContext) error {
 	if article.Status != models.ArticleStatusUnprocessed {
 		return ErrBadRequest(fmt.Errorf("This article is not unprocessed and therefore can't be used to train the model"))
 	}
-	err = TrainModel(ctx.ProjectID, article, true, ctx.Payload.Include)
+	screenAbstract := true
+	if ctx.Type != nil {
+		if *ctx.Type == "fulltext" {
+			screenAbstract = false
+		}
+	}
+	err = TrainModel(ctx.ProjectID, article, screenAbstract, ctx.Payload.Include)
 	if err != nil {
 		return ctx.InternalServerError()
 	}
 	article.Status = models.ArticleStatusExcluded
 	if ctx.Payload.Include {
 		article.Status = models.ArticleStatusIncludedOnAbstract
+		if !screenAbstract {
+			article.Status = models.ArticleStatusIncluded
+		}
 	}
 	fmt.Println("Updating article: ", article.Status)
 	err = DB.ArticleDB.Update(ctx, article)

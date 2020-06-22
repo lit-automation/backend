@@ -1225,6 +1225,7 @@ type AutoScreeningContext struct {
 	*goa.ResponseData
 	*goa.RequestData
 	ProjectID uuid.UUID
+	Type      *string
 }
 
 // NewAutoScreeningContext parses the incoming request URL and body, performs validations and creates the
@@ -1244,6 +1245,11 @@ func NewAutoScreeningContext(ctx context.Context, r *http.Request, service *goa.
 		} else {
 			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
 		}
+	}
+	paramType := req.Params["type"]
+	if len(paramType) > 0 {
+		rawType := paramType[0]
+		rctx.Type = &rawType
 	}
 	return &rctx, err
 }
@@ -1283,6 +1289,7 @@ type ShowScreeningContext struct {
 	*goa.RequestData
 	ArticleID uuid.UUID
 	ProjectID uuid.UUID
+	Type      *string
 }
 
 // NewShowScreeningContext parses the incoming request URL and body, performs validations and creates the
@@ -1311,6 +1318,11 @@ func NewShowScreeningContext(ctx context.Context, r *http.Request, service *goa.
 		} else {
 			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
 		}
+	}
+	paramType := req.Params["type"]
+	if len(paramType) > 0 {
+		rawType := paramType[0]
+		rctx.Type = &rawType
 	}
 	return &rctx, err
 }
@@ -1401,6 +1413,7 @@ type UpdateScreeningContext struct {
 	*goa.RequestData
 	ArticleID uuid.UUID
 	ProjectID uuid.UUID
+	Type      *string
 	Payload   *UpdateScreeningPayload
 }
 
@@ -1430,6 +1443,11 @@ func NewUpdateScreeningContext(ctx context.Context, r *http.Request, service *go
 		} else {
 			err = goa.MergeErrors(err, goa.InvalidParamTypeError("projectID", rawProjectID, "uuid"))
 		}
+	}
+	paramType := req.Params["type"]
+	if len(paramType) > 0 {
+		rawType := paramType[0]
+		rctx.Type = &rawType
 	}
 	return &rctx, err
 }
