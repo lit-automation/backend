@@ -188,18 +188,6 @@ func SentenceForTFIDF(model *text.NaiveBayes, total string, doc *models.Screenin
 	temp := AmountImportantWords
 	// Retrieve 11 most important words
 	frequencies := tf.MostImportantWords(total, temp)
-	if frequencies[len(frequencies)-1].TFIDF == frequencies[len(frequencies)-2].TFIDF {
-		mem := frequencies[len(frequencies)-1].TFIDF
-		for frequencies[len(frequencies)-1].TFIDF == mem {
-			temp--
-
-			if temp == 0 {
-				return total
-			}
-			frequencies = tf.MostImportantWords(total, temp)
-
-		}
-	}
 	tfIDFWords := make(map[string]bool)
 	for _, x := range frequencies {
 		tfIDFWords[x.Word] = true
@@ -230,7 +218,11 @@ func TrainModel(projectID uuid.UUID, article *models.Article, screenAbstract, in
 	model.Output = ioutil.Discard
 	go model.OnlineLearn(errors)
 	sentenceTFIDF := trainingSentence
-	err = model.RestoreFromFile("screening-models/" + projectID.String())
+	fullTextPrefix := ""
+	if !screenAbstract {
+		fullTextPrefix = "full_text"
+	}
+	err = model.RestoreFromFile("screening-models/" + fullTextPrefix + projectID.String())
 	if err != nil {
 		log.Info("no model yet")
 	} else {

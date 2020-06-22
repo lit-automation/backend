@@ -322,7 +322,7 @@ func (a *Article) SetCitedBy(c []*CitedBy) error {
 func (m *ArticleDB) RetrieveNotSnowBalled(ctx context.Context, projectID uuid.UUID) (*Article, error) {
 	var obj Article
 
-	err := m.Db.Table(m.TableName()).Where("(backward_snowball = false OR backward_snowball IS NULL) AND (status = ? OR status = ?) AND project_id = ? AND doi != ''", ArticleStatusIncludedOnAbstract, ArticleStatusIncluded, projectID).Limit(1).Find(&obj).Error
+	err := m.Db.Table(m.TableName()).Where("(backward_snowball = false OR backward_snowball IS NULL) AND (status = ? OR status = ?) AND project_id = ? AND doi != ''", ArticleStatusIncludedOnAbstract, ArticleStatusIncluded, projectID).Order("cited_amount DESC").Limit(1).Find(&obj).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

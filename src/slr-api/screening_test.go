@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	currentSet = "article_set_large_rl_personalization_100_unbalanced"
+	currentSet = "full_text_screening_100_unbalanced"
 )
 
 var (
@@ -30,6 +30,7 @@ var (
 // TestArticle result for training and verifying our model
 type TestArticle struct {
 	Title    string `json:"title"`
+	FullText string `json:"text"`
 	Abstract string `json:"abstract"`
 	Include  bool   `json:"include"`
 	Article  *models.Article
@@ -192,6 +193,7 @@ func (s *ScreenTestSuite) prepareTestData(testData []TestArticle) []TestArticle 
 		dbArtcle := &models.Article{
 			Title:       art.Title,
 			Abstract:    art.Abstract,
+			FullText:    art.FullText,
 			Keywords:    []byte("{}"),
 			Metadata:    []byte("{}"),
 			DocAbstract: []byte("{}"),
@@ -200,6 +202,8 @@ func (s *ScreenTestSuite) prepareTestData(testData []TestArticle) []TestArticle 
 		}
 		err := dbArtcle.SetAbstractDoc()
 		s.Require().NoError(err)
+		err = dbArtcle.SetFullTextDoc()
+		s.Require().NoError(err)
 		err = s.DBManager.ArticleDB.Add(context.Background(), dbArtcle)
 		s.Require().NoError(err)
 		testData[i].Article = dbArtcle
@@ -207,9 +211,11 @@ func (s *ScreenTestSuite) prepareTestData(testData []TestArticle) []TestArticle 
 	fmt.Println("Done preparing")
 	return testData
 }
-
 func (s *ScreenTestSuite) TestActiveLearningPerDocument() {
-	toTrainSet := []int{1}
+	//toTrainSet := []int{0, 2, 29, 1, 190, 227, 258, 294, 296, 333, 350, 356, 368, 373, 399, 408, 411, 420, 431, 441, 447, 449, 455, 493, 502, 635, 689, 704, 738, 739, 760, 773, 815, 827, 830, 836, 872, 888, 906, 921} //, 836, 476, 465, 310, 449, 262, 455, 502, 760}
+	toTrainSet := []int{89, 99}
+
+	abstractScreening := false
 
 	fileName := currentSet
 	file, err := ioutil.ReadFile("testdata/" + fileName + ".json")
@@ -222,16 +228,14 @@ func (s *ScreenTestSuite) TestActiveLearningPerDocument() {
 	trainedSet := []int{}
 	resultMapTF := make(map[int][]*AccuracyScore)
 	resultMapTFIDF := make(map[int][]*AccuracyScore)
-	for len(trainedSet) < 90 {
+	for len(trainedSet) < len(testData)*90/100 {
 		for i := range toTrainSet {
 			index := toTrainSet[i]
 			trainedSet = append(trainedSet, index)
-			err := TrainModel(modelID, testData[index].Article, true, testData[index].Include)
+			err := TrainModel(modelID, testData[index].Article, abstractScreening, testData[index].Include)
 			s.Require().NoError(err)
 		}
-		fmt.Println(len(trainedSet))
 		result := s.predictActiveSet(testData, trainedSet, modelID, resultMapTF, resultMapTFIDF)
-
 		sort.Slice(result, func(i, j int) bool {
 			return result[i].Confidence < result[j].Confidence
 		})
@@ -254,7 +258,7 @@ func (s *ScreenTestSuite) TestActiveLearning() {
 	modelID := uuid.Must(uuid.NewV4())
 	trainedSet := []int{}
 	// Init for test
-	toTrainSet := []int{7, 6, 4, 69}
+	toTrainSet := []int{7, 6}
 	resultMapTF := make(map[int][]*AccuracyScore)
 	resultMapTFIDF := make(map[int][]*AccuracyScore)
 	for _, x := range trainingAmounts {
@@ -264,18 +268,12 @@ func (s *ScreenTestSuite) TestActiveLearning() {
 			err := TrainModel(modelID, testData[index].Article, true, testData[index].Include)
 			s.Require().NoError(err)
 		}
-		fmt.Println(len(trainedSet))
 		result := s.predictActiveSet(testData, trainedSet, modelID, resultMapTF, resultMapTFIDF)
 
 		sort.Slice(result, func(i, j int) bool {
 			return result[i].Confidence < result[j].Confidence
 		})
 		toTrainSet = []int{}
-		for _, y := range result {
-			if y.Confidence == 0.5 {
-				fmt.Println(x, y.Confidence)
-			}
-		}
 		for j := 0; j < x-len(trainedSet); j++ {
 			toTrainSet = append(toTrainSet, result[j].Index)
 		}
@@ -292,7 +290,6 @@ type ActiveLearningPredictor struct {
 func (s *ScreenTestSuite) predictActiveSet(testData []TestArticle, trainedSet []int, modelID uuid.UUID, resultMapTF, resultMapTFIDF map[int][]*AccuracyScore) []ActiveLearningPredictor {
 	activeLearningPredictor := []ActiveLearningPredictor{}
 	tfIDFAccuracy := &AccuracyScore{Total: len(testData) - len(trainedSet)}
-	termFrequencyAccuracy := &AccuracyScore{Total: len(testData) - len(trainedSet)}
 	processed := 0
 	for i, art := range testData {
 		if isInTrainedSet(trainedSet, i) {
@@ -306,10 +303,7 @@ func (s *ScreenTestSuite) predictActiveSet(testData []TestArticle, trainedSet []
 			Index:      i,
 		})
 		tfIDFAccuracy.verifyResult(art.Include, res.Tfidf.Class)
-		termFrequencyAccuracy.verifyResult(art.Include, res.Tf.Class)
 	}
-
-	resultMapTF[len(trainedSet)] = append(resultMapTF[len(trainedSet)], termFrequencyAccuracy)
 	log.Infof("TFIDF:")
 	tfIDFAccuracy.PrintAccuracy()
 	resultMapTFIDF[len(trainedSet)] = append(resultMapTFIDF[len(trainedSet)], tfIDFAccuracy)

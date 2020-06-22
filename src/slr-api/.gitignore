@@ -10,6 +10,6 @@ screening-models
 testdatacreator
 fulltextcreator
 abstract-enhancer
-test.csv
+*.csv
 *.json
 .DS_Store

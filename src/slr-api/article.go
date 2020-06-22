@@ -2,15 +2,16 @@ package main
 
 import (
 	"encoding/csv"
+	"io"
+	"os"
+	"strconv"
+
 	"github.com/goadesign/goa"
 	"github.com/gofrs/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/wimspaargaren/slr-automation/src/packages/logfields"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/app"
 	"github.com/wimspaargaren/slr-automation/src/slr-api/models"
-	"io"
-	"os"
-	"strconv"
 )
 
 // ArticleController implements the article resource.
@@ -55,7 +56,6 @@ func (c *ArticleController) Create(ctx *app.CreateArticleContext) error {
 		ID:    article.ID,
 		Title: article.Title,
 	}
-	// res := &app.Article{}
 	return ctx.OK(article.ArticleToArticle())
 
 	// ArticleController_Create: end_implement
@@ -267,6 +267,36 @@ func (c *ArticleController) Update(ctx *app.UpdateArticleContext) error {
 			return ErrInternal("Unable to update article")
 		}
 		article.BackwardSnowball = true
+		citedBy, err := article.GetCitedBy()
+		if err != nil {
+			log.WithError(err).Error("unable to retrieve cited by")
+			return ErrInternal("Unable to update article")
+		}
+		for _, cited := range citedBy {
+			art := models.Article{
+				ProjectID:   projectID,
+				Title:       cited.Title,
+				Doi:         cited.Doi,
+				URL:         cited.URL,
+				CitedAmount: cited.CitedAmount,
+				Status:      models.ArticleStatusUnprocessed,
+				Keywords:    []byte("[]"),
+				Metadata:    []byte("{}"),
+				DocAbstract: []byte("{}"),
+				DocFullText: []byte("{}"),
+				CitedBy:     []byte("[]"),
+			}
+			err = DB.ArticleDB.Add(ctx, &art)
+			if err != nil {
+				log.WithError(err).Error("unable to add cited by article")
+				return ErrInternal("Unable to update article")
+			}
+			enhancementChan <- ArticleEnhancement{
+				ID:    article.ID,
+				Title: article.Title,
+			}
+
+		}
 	}
 
 	err = DB.ArticleDB.PolicyScope(projectID).Update(ctx, article)
