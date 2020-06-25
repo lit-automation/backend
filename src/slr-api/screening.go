@@ -24,26 +24,35 @@ func NewScreeningController(service *goa.Service) *ScreeningController {
 // Auto runs the auto action.
 func (c *ScreeningController) Auto(ctx *app.AutoScreeningContext) error {
 	// ScreeningController_Auto: start_implement
+
 	projectID, err := ProjectIDFromContext(ctx, ctx.ProjectID)
 	if err != nil {
 		return err
 	}
-	err = VerifyModel(projectID)
+	screenAbstract := true
+	if ctx.ScreenType == "fulltext" {
+		screenAbstract = false
+	}
+	err = VerifyModel(projectID, screenAbstract)
 	if err != nil {
 		return ErrBadRequest(err)
 	}
 
-	articles, err := DB.ArticleDB.ListOnStatus(context.Background(), projectID, models.ArticleStatusUnprocessed)
-	if err != nil {
-		log.Errorf("unable to list articles for screening: %s", err)
-		return ctx.InternalServerError()
-	}
-	screenAbstract := true
-	if ctx.Type != nil {
-		if *ctx.Type == "fulltext" {
-			screenAbstract = false
+	var articles []*models.Article
+	if screenAbstract {
+		articles, err = DB.ArticleDB.ListOnStatus(context.Background(), projectID, models.ArticleStatusUnprocessed)
+		if err != nil {
+			log.Errorf("unable to list articles for screening: %s", err)
+			return ctx.InternalServerError()
+		}
+	} else {
+		articles, err = DB.ArticleDB.ListOnStatus(context.Background(), projectID, models.ArticleStatusIncludedOnAbstract)
+		if err != nil {
+			log.Errorf("unable to list articles for screening: %s", err)
+			return ctx.InternalServerError()
 		}
 	}
+
 	for _, article := range articles {
 		if !article.Preprocessed {
 			continue
@@ -87,13 +96,17 @@ func (c *ScreeningController) Show(ctx *app.ShowScreeningContext) error {
 		return ErrBadRequest(fmt.Errorf("Article is not yet pre processed for screening, if you just imported your articles give the backend some time to process"))
 	}
 	if article.ProjectID != projectID {
-		return ctx.BadRequest(fmt.Errorf("Incorrect article ID"))
+		return ErrBadRequest(fmt.Errorf("Incorrect article ID"))
 	}
 	screenAbstract := true
-	if ctx.Type != nil {
-		if *ctx.Type == "fulltext" {
-			screenAbstract = false
-		}
+	if ctx.ScreenType == "fulltext" {
+		screenAbstract = false
+	}
+	if screenAbstract && article.Status != models.ArticleStatusUnprocessed {
+		return ErrBadRequest(fmt.Errorf("Only unprocessed articles can be screened on abstract"))
+	}
+	if !screenAbstract && article.Status != models.ArticleStatusIncludedOnAbstract {
+		return ErrBadRequest(fmt.Errorf("Only articles included on abstract can be screened on full text"))
 	}
 	res, err := GetScreeningMediaForProject(projectID, article, screenAbstract)
 	if err != nil {
@@ -114,18 +127,32 @@ func (c *ScreeningController) Shownext(ctx *app.ShownextScreeningContext) error 
 	if err != nil {
 		return err
 	}
-	articles, err := DB.ArticleDB.ListOnStatus(context.Background(), projectID, models.ArticleStatusUnprocessed)
-	if err != nil {
-		log.Errorf("unable to list articles for screening: %s", err)
-		return ctx.InternalServerError()
-	}
-	if len(articles) == 0 {
-		return ErrBadRequest(fmt.Errorf("No articles found for screening"))
-	}
 	screenAbstract := true
-	if ctx.Type == "fulltext" {
+	if ctx.ScreenType == "fulltext" {
 		screenAbstract = false
 	}
+	var articles []*models.Article
+	if screenAbstract {
+		articles, err = DB.ArticleDB.ListOnStatus(context.Background(), projectID, models.ArticleStatusUnprocessed)
+		if err != nil {
+			log.Errorf("unable to list articles for screening: %s", err)
+			return ctx.InternalServerError()
+		}
+	} else {
+		articles, err = DB.ArticleDB.ListOnStatus(context.Background(), projectID, models.ArticleStatusIncludedOnAbstract)
+		if err != nil {
+			log.Errorf("unable to list articles for screening: %s", err)
+			return ctx.InternalServerError()
+		}
+	}
+	if len(articles) == 0 {
+		additional := " on abstract"
+		if !screenAbstract {
+			additional = " on full text"
+		}
+		return ErrBadRequest(fmt.Errorf("No articles found for screening" + additional))
+	}
+
 	screeningResult := []*app.Articlescreening{}
 	for _, article := range articles {
 		if !article.Preprocessed {
@@ -152,6 +179,7 @@ func (c *ScreeningController) Shownext(ctx *app.ShownextScreeningContext) error 
 			counterEx++
 		}
 	}
+	// TODO fix for screen full text
 	totalArticles, err := DB.ArticleDB.CountOnStatusList(ctx, projectID, []models.ArticleStatus{models.ArticleStatusExcluded, models.ArticleStatusIncluded, models.ArticleStatusIncludedOnAbstract, models.ArticleStatusUnprocessed, models.ArticleStatusUnknown})
 	if err != nil {
 		log.Errorf("unable to retrieve total amount of articles: %s", err)
@@ -166,7 +194,6 @@ func (c *ScreeningController) Shownext(ctx *app.ShownextScreeningContext) error 
 		ScreenedArticles: float64(screenedArticles),
 		TotalArticles:    float64(totalArticles),
 	}
-	fmt.Println("Current situation:", counterInc, counterEx)
 	for _, result := range screeningResult {
 		if result.Tfidf.Abstract != "" {
 			result.ModelDetails = modelDetails
@@ -197,15 +224,14 @@ func (c *ScreeningController) Update(ctx *app.UpdateScreeningContext) error {
 	if article.ProjectID != projectID {
 		return ctx.NotFound()
 	}
-	if article.Status != models.ArticleStatusUnprocessed {
-		return ErrBadRequest(fmt.Errorf("This article is not unprocessed and therefore can't be used to train the model"))
-	}
 	screenAbstract := true
-	if ctx.Type != nil {
-		if *ctx.Type == "fulltext" {
-			screenAbstract = false
-		}
+	if ctx.ScreenType == "fulltext" {
+		screenAbstract = false
 	}
+	if article.Status != models.ArticleStatusUnprocessed && screenAbstract {
+		return ErrBadRequest(fmt.Errorf("This article is not unprocessed and therefore can't be used for screening on abstract"))
+	}
+
 	err = TrainModel(ctx.ProjectID, article, screenAbstract, ctx.Payload.Include)
 	if err != nil {
 		return ctx.InternalServerError()
@@ -217,7 +243,6 @@ func (c *ScreeningController) Update(ctx *app.UpdateScreeningContext) error {
 			article.Status = models.ArticleStatusIncluded
 		}
 	}
-	fmt.Println("Updating article: ", article.Status)
 	err = DB.ArticleDB.Update(ctx, article)
 	if err != nil {
 		return ctx.InternalServerError()

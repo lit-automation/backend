@@ -28,7 +28,7 @@ const (
 )
 
 // VerifyModel verifies if the model is ready for automatic screening
-func VerifyModel(projectID uuid.UUID) error {
+func VerifyModel(projectID uuid.UUID, abstractScreen bool) error {
 	stream := make(chan base.TextDatapoint, 100)
 	errors := make(chan error)
 
@@ -36,7 +36,12 @@ func VerifyModel(projectID uuid.UUID) error {
 
 	model.Output = ioutil.Discard
 	go model.OnlineLearn(errors)
-	err := model.RestoreFromFile("screening-models/" + projectID.String())
+	fullTextPrefix := ""
+	if !abstractScreen {
+		fullTextPrefix = "full_text"
+	}
+	path := "screening-models/" + fullTextPrefix + projectID.String()
+	err := model.RestoreFromFile(path)
 	if err != nil {
 		return fmt.Errorf("No model for article set yet")
 	}
@@ -78,9 +83,10 @@ func GetScreeningMediaForProject(projectID uuid.UUID, article *models.Article, a
 	if !abstractScreen {
 		fullTextPrefix = "full_text"
 	}
-	err = model.RestoreFromFile("screening-models/" + fullTextPrefix + projectID.String())
+	path := "screening-models/" + fullTextPrefix + projectID.String()
+	err = model.RestoreFromFile(path)
 	if err != nil {
-		log.Info("no model yet")
+		log.Info("no model yet screening")
 	} else {
 		sentenceTFIDF = SentenceForTFIDF(model, total, doc)
 		frequencies := TF(doc, AmountImportantWords)
@@ -123,6 +129,9 @@ func GetScreeningMediaForProject(projectID uuid.UUID, article *models.Article, a
 		Confidence: p,
 		Abstract:   article.Abstract,
 		Title:      article.Title,
+	}
+	if !abstractScreen {
+		res.Tfidf.Abstract = article.FullText
 	}
 	if docuCount > 0 {
 		class, p = model.Probability(sentenceTF)
@@ -206,12 +215,11 @@ func SentenceForTFIDF(model *text.NaiveBayes, total string, doc *models.Screenin
 }
 
 // TrainModel trains the model
-func TrainModel(projectID uuid.UUID, article *models.Article, screenAbstract, include bool) error {
-	trainingSentence, doc, err := getSanitizedText(article, screenAbstract)
+func TrainModel(projectID uuid.UUID, article *models.Article, abstractScreen, include bool) error {
+	trainingSentence, doc, err := getSanitizedText(article, abstractScreen)
 	if err != nil {
 		return err
 	}
-
 	stream := make(chan base.TextDatapoint, 100)
 	errors := make(chan error)
 	model := text.NewNaiveBayes(stream, 2, base.OnlyWordsAndNumbers)
@@ -219,12 +227,13 @@ func TrainModel(projectID uuid.UUID, article *models.Article, screenAbstract, in
 	go model.OnlineLearn(errors)
 	sentenceTFIDF := trainingSentence
 	fullTextPrefix := ""
-	if !screenAbstract {
+	if !abstractScreen {
 		fullTextPrefix = "full_text"
 	}
-	err = model.RestoreFromFile("screening-models/" + fullTextPrefix + projectID.String())
+	path := "screening-models/" + fullTextPrefix + projectID.String()
+	err = model.RestoreFromFile(path)
 	if err != nil {
-		log.Info("no model yet")
+		log.Info("no model yet training")
 	} else {
 		sentenceTFIDF = SentenceForTFIDF(model, trainingSentence, doc)
 	}
@@ -249,7 +258,7 @@ func TrainModel(projectID uuid.UUID, article *models.Article, screenAbstract, in
 			break
 		}
 	}
-	err = model.PersistToFile("screening-models/" + projectID.String())
+	err = model.PersistToFile(path)
 	if err != nil {
 		return err
 	}

@@ -353,7 +353,7 @@ func (a *Article) GetAbstractDoc() (*ScreeningData, error) {
 }
 
 func (a *Article) SetFullTextDoc() error {
-	doc, err := prose.NewDocument(a.Title+" "+a.Abstract, prose.WithExtraction(false), prose.WithTokenization(false))
+	doc, err := prose.NewDocument(a.FullText, prose.WithExtraction(false), prose.WithTokenization(false))
 	if err != nil {
 		return err
 	}

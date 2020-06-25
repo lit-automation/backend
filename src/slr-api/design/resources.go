@@ -274,7 +274,8 @@ var _ = Resource("screening", func() {
 		)
 		Params(func() {
 			Param("articleID", UUID, "Article ID")
-			Param("type", String)
+			Param("screen_type", String)
+			Required("screen_type")
 		})
 		Description("Show article screening")
 		Response(OK)
@@ -283,10 +284,10 @@ var _ = Resource("screening", func() {
 	})
 	Action("shownext", func() {
 		Routing(
-			GET("/activelearning/:type"),
+			GET("/activelearning/:screen_type"),
 		)
 		Params(func() {
-			Param("type", String)
+			Param("screen_type", String)
 		})
 		Description("Show article screening")
 		Response(OK)
@@ -299,7 +300,8 @@ var _ = Resource("screening", func() {
 		)
 		Params(func() {
 			Param("articleID", UUID, "Article ID")
-			Param("type", String)
+			Param("screen_type", String)
+			Required("screen_type")
 		})
 		Payload(func() {
 			Member("include", Boolean)
@@ -315,7 +317,8 @@ var _ = Resource("screening", func() {
 			POST("auto"),
 		)
 		Params(func() {
-			Param("type", String)
+			Param("screen_type", String)
+			Required("screen_type")
 		})
 		Response(OK, func() {
 			Media(AutoScreenAbstract)

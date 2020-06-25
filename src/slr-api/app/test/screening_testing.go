@@ -29,7 +29,7 @@ import (
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func AutoScreeningBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, type_ *string) (http.ResponseWriter, error) {
+func AutoScreeningBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, screenType string) (http.ResponseWriter, error) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -50,9 +50,9 @@ func AutoScreeningBadRequest(t goatest.TInterface, ctx context.Context, service 
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		query["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		query["screen_type"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/screen/auto", projectID),
@@ -64,9 +64,9 @@ func AutoScreeningBadRequest(t goatest.TInterface, ctx context.Context, service 
 	}
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		prms["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		prms["screen_type"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()
@@ -108,7 +108,7 @@ func AutoScreeningBadRequest(t goatest.TInterface, ctx context.Context, service 
 // It returns the response writer so it's possible to inspect the response headers.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func AutoScreeningInternalServerError(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, type_ *string) http.ResponseWriter {
+func AutoScreeningInternalServerError(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, screenType string) http.ResponseWriter {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -128,9 +128,9 @@ func AutoScreeningInternalServerError(t goatest.TInterface, ctx context.Context,
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		query["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		query["screen_type"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/screen/auto", projectID),
@@ -142,9 +142,9 @@ func AutoScreeningInternalServerError(t goatest.TInterface, ctx context.Context,
 	}
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		prms["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		prms["screen_type"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()
@@ -179,7 +179,7 @@ func AutoScreeningInternalServerError(t goatest.TInterface, ctx context.Context,
 // It returns the response writer so it's possible to inspect the response headers.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func AutoScreeningNotFound(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, type_ *string) http.ResponseWriter {
+func AutoScreeningNotFound(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, screenType string) http.ResponseWriter {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -199,9 +199,9 @@ func AutoScreeningNotFound(t goatest.TInterface, ctx context.Context, service *g
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		query["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		query["screen_type"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/screen/auto", projectID),
@@ -213,9 +213,9 @@ func AutoScreeningNotFound(t goatest.TInterface, ctx context.Context, service *g
 	}
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		prms["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		prms["screen_type"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()
@@ -250,7 +250,7 @@ func AutoScreeningNotFound(t goatest.TInterface, ctx context.Context, service *g
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func AutoScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, type_ *string) (http.ResponseWriter, *app.Autoscreenabstract) {
+func AutoScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, screenType string) (http.ResponseWriter, *app.Autoscreenabstract) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -271,9 +271,9 @@ func AutoScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Ser
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		query["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		query["screen_type"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/screen/auto", projectID),
@@ -285,9 +285,9 @@ func AutoScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Ser
 	}
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		prms["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		prms["screen_type"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()
@@ -334,7 +334,7 @@ func AutoScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Ser
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ShowScreeningBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, type_ *string) (http.ResponseWriter, error) {
+func ShowScreeningBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, screenType string) (http.ResponseWriter, error) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -355,9 +355,9 @@ func ShowScreeningBadRequest(t goatest.TInterface, ctx context.Context, service 
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		query["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		query["screen_type"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/screen/%v", projectID, articleID),
@@ -370,9 +370,9 @@ func ShowScreeningBadRequest(t goatest.TInterface, ctx context.Context, service 
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
 	prms["articleID"] = []string{fmt.Sprintf("%v", articleID)}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		prms["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		prms["screen_type"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()
@@ -414,7 +414,7 @@ func ShowScreeningBadRequest(t goatest.TInterface, ctx context.Context, service 
 // It returns the response writer so it's possible to inspect the response headers.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ShowScreeningInternalServerError(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, type_ *string) http.ResponseWriter {
+func ShowScreeningInternalServerError(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, screenType string) http.ResponseWriter {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -434,9 +434,9 @@ func ShowScreeningInternalServerError(t goatest.TInterface, ctx context.Context,
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		query["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		query["screen_type"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/screen/%v", projectID, articleID),
@@ -449,9 +449,9 @@ func ShowScreeningInternalServerError(t goatest.TInterface, ctx context.Context,
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
 	prms["articleID"] = []string{fmt.Sprintf("%v", articleID)}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		prms["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		prms["screen_type"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()
@@ -486,7 +486,7 @@ func ShowScreeningInternalServerError(t goatest.TInterface, ctx context.Context,
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ShowScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, type_ *string) (http.ResponseWriter, *app.Articlescreening) {
+func ShowScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, screenType string) (http.ResponseWriter, *app.Articlescreening) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -507,9 +507,9 @@ func ShowScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Ser
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		query["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		query["screen_type"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/screen/%v", projectID, articleID),
@@ -522,9 +522,9 @@ func ShowScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Ser
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
 	prms["articleID"] = []string{fmt.Sprintf("%v", articleID)}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		prms["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		prms["screen_type"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()
@@ -571,7 +571,7 @@ func ShowScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Ser
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ShownextScreeningBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, type_ string) (http.ResponseWriter, error) {
+func ShownextScreeningBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, screenType string) (http.ResponseWriter, error) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -592,7 +592,7 @@ func ShownextScreeningBadRequest(t goatest.TInterface, ctx context.Context, serv
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/v1/project/%v/screen/activelearning/%v", projectID, type_),
+		Path: fmt.Sprintf("/v1/project/%v/screen/activelearning/%v", projectID, screenType),
 	}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
@@ -600,7 +600,7 @@ func ShownextScreeningBadRequest(t goatest.TInterface, ctx context.Context, serv
 	}
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
-	prms["type"] = []string{fmt.Sprintf("%v", type_)}
+	prms["screen_type"] = []string{fmt.Sprintf("%v", screenType)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -641,7 +641,7 @@ func ShownextScreeningBadRequest(t goatest.TInterface, ctx context.Context, serv
 // It returns the response writer so it's possible to inspect the response headers.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ShownextScreeningInternalServerError(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, type_ string) http.ResponseWriter {
+func ShownextScreeningInternalServerError(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, screenType string) http.ResponseWriter {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -661,7 +661,7 @@ func ShownextScreeningInternalServerError(t goatest.TInterface, ctx context.Cont
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/v1/project/%v/screen/activelearning/%v", projectID, type_),
+		Path: fmt.Sprintf("/v1/project/%v/screen/activelearning/%v", projectID, screenType),
 	}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
@@ -669,7 +669,7 @@ func ShownextScreeningInternalServerError(t goatest.TInterface, ctx context.Cont
 	}
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
-	prms["type"] = []string{fmt.Sprintf("%v", type_)}
+	prms["screen_type"] = []string{fmt.Sprintf("%v", screenType)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -703,7 +703,7 @@ func ShownextScreeningInternalServerError(t goatest.TInterface, ctx context.Cont
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ShownextScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, type_ string) (http.ResponseWriter, *app.Articlescreening) {
+func ShownextScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, screenType string) (http.ResponseWriter, *app.Articlescreening) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -724,7 +724,7 @@ func ShownextScreeningOK(t goatest.TInterface, ctx context.Context, service *goa
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/v1/project/%v/screen/activelearning/%v", projectID, type_),
+		Path: fmt.Sprintf("/v1/project/%v/screen/activelearning/%v", projectID, screenType),
 	}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
@@ -732,7 +732,7 @@ func ShownextScreeningOK(t goatest.TInterface, ctx context.Context, service *goa
 	}
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
-	prms["type"] = []string{fmt.Sprintf("%v", type_)}
+	prms["screen_type"] = []string{fmt.Sprintf("%v", screenType)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -778,7 +778,7 @@ func ShownextScreeningOK(t goatest.TInterface, ctx context.Context, service *goa
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func UpdateScreeningBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, type_ *string, payload *app.UpdateScreeningPayload) (http.ResponseWriter, error) {
+func UpdateScreeningBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, screenType string, payload *app.UpdateScreeningPayload) (http.ResponseWriter, error) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -799,9 +799,9 @@ func UpdateScreeningBadRequest(t goatest.TInterface, ctx context.Context, servic
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		query["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		query["screen_type"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/screen/%v", projectID, articleID),
@@ -814,9 +814,9 @@ func UpdateScreeningBadRequest(t goatest.TInterface, ctx context.Context, servic
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
 	prms["articleID"] = []string{fmt.Sprintf("%v", articleID)}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		prms["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		prms["screen_type"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()
@@ -859,7 +859,7 @@ func UpdateScreeningBadRequest(t goatest.TInterface, ctx context.Context, servic
 // It returns the response writer so it's possible to inspect the response headers.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func UpdateScreeningInternalServerError(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, type_ *string, payload *app.UpdateScreeningPayload) http.ResponseWriter {
+func UpdateScreeningInternalServerError(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, screenType string, payload *app.UpdateScreeningPayload) http.ResponseWriter {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -879,9 +879,9 @@ func UpdateScreeningInternalServerError(t goatest.TInterface, ctx context.Contex
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		query["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		query["screen_type"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/screen/%v", projectID, articleID),
@@ -894,9 +894,9 @@ func UpdateScreeningInternalServerError(t goatest.TInterface, ctx context.Contex
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
 	prms["articleID"] = []string{fmt.Sprintf("%v", articleID)}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		prms["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		prms["screen_type"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()
@@ -932,7 +932,7 @@ func UpdateScreeningInternalServerError(t goatest.TInterface, ctx context.Contex
 // It returns the response writer so it's possible to inspect the response headers.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func UpdateScreeningNotFound(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, type_ *string, payload *app.UpdateScreeningPayload) http.ResponseWriter {
+func UpdateScreeningNotFound(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, screenType string, payload *app.UpdateScreeningPayload) http.ResponseWriter {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -952,9 +952,9 @@ func UpdateScreeningNotFound(t goatest.TInterface, ctx context.Context, service 
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		query["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		query["screen_type"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/screen/%v", projectID, articleID),
@@ -967,9 +967,9 @@ func UpdateScreeningNotFound(t goatest.TInterface, ctx context.Context, service 
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
 	prms["articleID"] = []string{fmt.Sprintf("%v", articleID)}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		prms["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		prms["screen_type"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()
@@ -1005,7 +1005,7 @@ func UpdateScreeningNotFound(t goatest.TInterface, ctx context.Context, service 
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func UpdateScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, type_ *string, payload *app.UpdateScreeningPayload) (http.ResponseWriter, *app.Articlescreening) {
+func UpdateScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.ScreeningController, projectID uuid.UUID, articleID uuid.UUID, screenType string, payload *app.UpdateScreeningPayload) (http.ResponseWriter, *app.Articlescreening) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -1026,9 +1026,9 @@ func UpdateScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.S
 	// Setup request context
 	rw := httptest.NewRecorder()
 	query := url.Values{}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		query["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		query["screen_type"] = sliceVal
 	}
 	u := &url.URL{
 		Path:     fmt.Sprintf("/v1/project/%v/screen/%v", projectID, articleID),
@@ -1041,9 +1041,9 @@ func UpdateScreeningOK(t goatest.TInterface, ctx context.Context, service *goa.S
 	prms := url.Values{}
 	prms["projectID"] = []string{fmt.Sprintf("%v", projectID)}
 	prms["articleID"] = []string{fmt.Sprintf("%v", articleID)}
-	if type_ != nil {
-		sliceVal := []string{*type_}
-		prms["type"] = sliceVal
+	{
+		sliceVal := []string{screenType}
+		prms["screen_type"] = sliceVal
 	}
 	if ctx == nil {
 		ctx = context.Background()

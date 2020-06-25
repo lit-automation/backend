@@ -604,7 +604,7 @@ func MountScreeningController(service *goa.Service, ctrl ScreeningController) {
 	var h goa.Handler
 	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/screen/auto", ctrl.MuxHandler("preflight", handleScreeningOrigin(cors.HandlePreflight()), nil))
 	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/screen/:articleID", ctrl.MuxHandler("preflight", handleScreeningOrigin(cors.HandlePreflight()), nil))
-	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/screen/activelearning/:type", ctrl.MuxHandler("preflight", handleScreeningOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/v1/project/:projectID/screen/activelearning/:screen_type", ctrl.MuxHandler("preflight", handleScreeningOrigin(cors.HandlePreflight()), nil))
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request
@@ -654,8 +654,8 @@ func MountScreeningController(service *goa.Service, ctrl ScreeningController) {
 	}
 	h = handleSecurity("jwt", h, "api:access")
 	h = handleScreeningOrigin(h)
-	service.Mux.Handle("GET", "/v1/project/:projectID/screen/activelearning/:type", ctrl.MuxHandler("shownext", h, nil))
-	service.LogInfo("mount", "ctrl", "Screening", "action", "Shownext", "route", "GET /v1/project/:projectID/screen/activelearning/:type", "security", "jwt")
+	service.Mux.Handle("GET", "/v1/project/:projectID/screen/activelearning/:screen_type", ctrl.MuxHandler("shownext", h, nil))
+	service.LogInfo("mount", "ctrl", "Screening", "action", "Shownext", "route", "GET /v1/project/:projectID/screen/activelearning/:screen_type", "security", "jwt")
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request

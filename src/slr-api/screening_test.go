@@ -214,6 +214,7 @@ func (s *ScreenTestSuite) prepareTestData(testData []TestArticle) []TestArticle 
 func (s *ScreenTestSuite) TestActiveLearningPerDocument() {
 	//toTrainSet := []int{0, 2, 29, 1, 190, 227, 258, 294, 296, 333, 350, 356, 368, 373, 399, 408, 411, 420, 431, 441, 447, 449, 455, 493, 502, 635, 689, 704, 738, 739, 760, 773, 815, 827, 830, 836, 872, 888, 906, 921} //, 836, 476, 465, 310, 449, 262, 455, 502, 760}
 	toTrainSet := []int{89, 99}
+	// toTrainSet := []int{8, 0}
 
 	abstractScreening := false
 
@@ -228,6 +229,8 @@ func (s *ScreenTestSuite) TestActiveLearningPerDocument() {
 	trainedSet := []int{}
 	resultMapTF := make(map[int][]*AccuracyScore)
 	resultMapTFIDF := make(map[int][]*AccuracyScore)
+	fmt.Println("hilen(testData)*90/100", len(testData)*90/100)
+	fmt.Println("hilen(testData)*90/100", modelID)
 	for len(trainedSet) < len(testData)*90/100 {
 		for i := range toTrainSet {
 			index := toTrainSet[i]
@@ -235,7 +238,7 @@ func (s *ScreenTestSuite) TestActiveLearningPerDocument() {
 			err := TrainModel(modelID, testData[index].Article, abstractScreening, testData[index].Include)
 			s.Require().NoError(err)
 		}
-		result := s.predictActiveSet(testData, trainedSet, modelID, resultMapTF, resultMapTFIDF)
+		result := s.predictActiveSet(abstractScreening, testData, trainedSet, modelID, resultMapTF, resultMapTFIDF)
 		sort.Slice(result, func(i, j int) bool {
 			return result[i].Confidence < result[j].Confidence
 		})
@@ -268,7 +271,7 @@ func (s *ScreenTestSuite) TestActiveLearning() {
 			err := TrainModel(modelID, testData[index].Article, true, testData[index].Include)
 			s.Require().NoError(err)
 		}
-		result := s.predictActiveSet(testData, trainedSet, modelID, resultMapTF, resultMapTFIDF)
+		result := s.predictActiveSet(true, testData, trainedSet, modelID, resultMapTF, resultMapTFIDF)
 
 		sort.Slice(result, func(i, j int) bool {
 			return result[i].Confidence < result[j].Confidence
@@ -287,7 +290,7 @@ type ActiveLearningPredictor struct {
 	Confidence float64
 }
 
-func (s *ScreenTestSuite) predictActiveSet(testData []TestArticle, trainedSet []int, modelID uuid.UUID, resultMapTF, resultMapTFIDF map[int][]*AccuracyScore) []ActiveLearningPredictor {
+func (s *ScreenTestSuite) predictActiveSet(abstractScreening bool, testData []TestArticle, trainedSet []int, modelID uuid.UUID, resultMapTF, resultMapTFIDF map[int][]*AccuracyScore) []ActiveLearningPredictor {
 	activeLearningPredictor := []ActiveLearningPredictor{}
 	tfIDFAccuracy := &AccuracyScore{Total: len(testData) - len(trainedSet)}
 	processed := 0
@@ -296,7 +299,7 @@ func (s *ScreenTestSuite) predictActiveSet(testData []TestArticle, trainedSet []
 			continue
 		}
 		processed++
-		res, err := GetScreeningMediaForProject(modelID, art.Article, true)
+		res, err := GetScreeningMediaForProject(modelID, art.Article, abstractScreening)
 		s.Require().NoError(err)
 		activeLearningPredictor = append(activeLearningPredictor, ActiveLearningPredictor{
 			Confidence: res.Tfidf.Confidence,
