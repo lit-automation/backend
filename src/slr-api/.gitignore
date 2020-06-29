@@ -13,3 +13,4 @@ abstract-enhancer
 *.csv
 *.json
 .DS_Store
+temp

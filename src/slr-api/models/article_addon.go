@@ -257,7 +257,7 @@ func (m *ArticleDB) ListNonDuplicatesForProject(ctx context.Context, projectID u
 func (m *ArticleDB) ListNotPreProcessed(ctx context.Context) ([]*Article, error) {
 
 	var objs []*Article
-	err := m.Db.Table(m.TableName()).Where("preprocessed = false OR preprocessed IS NULL").Find(&objs).Error
+	err := m.Db.Table(m.TableName()).Where("(preprocessed = false OR preprocessed IS NULL) AND checked_by_crossref = true").Find(&objs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
