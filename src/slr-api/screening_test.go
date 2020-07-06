@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	currentSet = "full_text_screening_100_unbalanced"
+	currentSet = "article_set_large_aiforfintech_100_balanced"
 )
 
 var (
-	screeningTestSetSizes = []int{6, 8, 10, 20, 30, 40, 50, 75, 90}
+	screeningTestSetSizes = []int{4, 6, 8, 10, 20, 30, 40, 50, 75, 90}
 )
 
 // TestArticle result for training and verifying our model
@@ -328,7 +328,7 @@ func (s *ScreenTestSuite) TestAccuracyLargeSet() {
 	resultMapTFIDF := make(map[int][]*AccuracyScore)
 	for _, x := range trainingAmounts {
 		// Add crossvalidation of 5 runs
-		runs := 5
+		runs := 10
 		remainder := len(testData) - x
 		incr := remainder / runs
 
